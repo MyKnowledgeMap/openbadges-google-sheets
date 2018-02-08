@@ -1,10 +1,13 @@
 // Events
-import * as Events from "./events";
-global.onInstall = Events.onInstall;
-global.onOpen = Events.onOpen;
-global.onFormSubmit = Events.onFormSubmit;
-global.onSaveConfiguration = Events.onSaveConfiguration;
+import { Events } from "./events";
+
+const events = new Events();
+global.onInstall = events.onInstall;
+global.onOpen = events.onOpen;
+global.onFormSubmit = events.onFormSubmit;
+global.onSaveConfiguration = events.onSaveConfiguration;
 
 //  UI
-import * as UserInterfaces from "./user-interfaces";
-global.showConfigurationModal = UserInterfaces.showConfigurationModal;
+import { UserInterfaces } from "./user-interfaces";
+const ui = new UserInterfaces();
+global.showConfigurationModal = ui.showConfigurationModal;

@@ -1,7 +1,8 @@
 const path = require("path");
-const cleanWebpackPlugin = require("clean-webpack-plugin");
-const copyWebpackPlugin = require("copy-webpack-plugin");
-const gasWebpackPlugin = require("gas-webpack-plugin");
+const webpack = require("webpack");
+const CleanWebpackPlugin = require("clean-webpack-plugin");
+// const CopyWebpackPlugin = require("copy-webpack-plugin");
+const GASWebpackPlugin = require("gas-webpack-plugin");
 
 module.exports = {
   entry: [path.join(__dirname, "src/index.js")],
@@ -15,22 +16,34 @@ module.exports = {
     modules: [path.join(__dirname, "src"), path.join(__dirname, "node_modules")]
   },
   module: {
-    rules: [{
-      test: /\.html$/,
-      use: [ {
-        loader: 'html-loader',
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: [/node_modules/],
+        loader: "babel-loader",
         options: {
-          minimize: false
+          presets: [["env", { modules: false }]]
         }
-      }],
-    }]
+      },
+      {
+        test: /\.html$/,
+        use: [
+          {
+            loader: "html-loader",
+            options: {
+              minimize: false
+            }
+          }
+        ]
+      }
+    ]
   },
   plugins: [
     // Clean the /dist folder before adding the new files.
-    new cleanWebpackPlugin(["dist"]),
+    new CleanWebpackPlugin(["dist"]),
     // Use the GoogleAppScript plugin to assign global functions.
-    new gasWebpackPlugin(),
+    new GASWebpackPlugin()
     // Copy the UI templates.
-    //new copyWebpackPlugin([{ from: "./src/templates" }])
+    // new CopyWebpackPlugin([{ from: "./src/templates" }])
   ]
 };

@@ -10,32 +10,94 @@
   }
 </style>
 
-<form>
-  <div class="form-group">
-    <label for="apiKey">API key</label>
-    <input type="text" id="apiKey" value="<?= apiKey ?>">
-  </div>
-  <div class="form-group">
-    <label for="authToken">Authorization token</label>
-    <textarea id="authToken" rows="2" style="resize: none" value="<?= authToken ?>"></textarea>
-  </div>
+<form id="configuration-form">
+
+  <b>Application</b>
   <div class="form-group">
     <label for="openBadgesUrl">OpenBadges address</label>
-    <input type="text" id="openBadgesUrl" value="<?= openBadgesUrl ?>">
+    <input type="text" id="openBadgesUrl" value="<?= openBadgesUrl ?>" required>
   </div>
+
+  <div class="form-group">
+    <label for="apiKey">API key</label>
+    <input type="text" id="apiKey" value="<?= apiKey ?>" required>
+  </div>
+
+  <div class="form-group">
+    <label for="authToken">Authorization token</label>
+    <textarea id="authToken" rows="2" style="resize: none"><?= authToken ?></textarea>
+  </div>
+
+  <b>Event Details</b>
+  <div class="form-group">
+    <label for="activityId">Activity ID</label>
+    <input type="text" id="activityId" value="<?= activityId ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="activityTime">Activity Date/Time</label>
+    <input type="date" id="activityTime" value="<?= activityTime ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="userId">User ID</label>
+    <input type="text" id="userId" value="<?= userId ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="firstName">First Name</label>
+    <input type="text" id="firstName" value="<?= firstName ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="lastName">Last Name</label>
+    <input type="text" id="lastName" value="<?= lastName ?>">
+  </div>
+
+  <b>Miscellaneous</b>
+  <div class="form-group">
+    <label for="text1">Text 1</label>
+    <input type="text" id="text1" value="<?= text1 ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="text2">Text 2</label>
+    <input type="text" id="text2" value="<?= text2 ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" value="<?= email ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="int1">Integer 1</label>
+    <input type="number" id="int1" value="<?= int1 ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="int2">Integer 2</label>
+    <input type="number" id="int2" value="<?= int2 ?>">
+  </div>
+
+  <div class="form-group">
+    <label for="date1">Date 1</label>
+    <input type="date" id="date1" value="<?= date1 ?>">
+  </div>
+
   <button class="action" type="button" id="save">Save</button>
 </form>
 <script>
-  var apiKeyInput = document.getElementById("apiKey");
-  var authTokenInput = document.getElementById("authToken");
-  var openBadgesUrlInput = document.getElementById("openBadgesUrl");
-
   function onClickSave() {
-    var config = {
-      apiKey: apiKeyInput.value,
-      authToken: authTokenInput.value,
-      openBadgesUrl: openBadgesUrlInput.value
+    var config = {};
+
+    var form = document.getElementById('configuration-form');
+
+    for (var i = 0; i < form.elements.length; i++) {
+      var current = form.elements[i];
+      config[current.id] = current.value;
     }
+
     google.script.run
       .withSuccessHandler(function () { google.script.host.close() })
       .onSaveConfiguration(config);
