@@ -1,7 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
-// const CopyWebpackPlugin = require("copy-webpack-plugin");
 const GASWebpackPlugin = require("gas-webpack-plugin");
 
 module.exports = {
@@ -31,7 +30,7 @@ module.exports = {
           {
             loader: "html-loader",
             options: {
-              minimize: false
+              minimize: true
             }
           }
         ]
@@ -39,11 +38,10 @@ module.exports = {
     ]
   },
   plugins: [
+    new webpack.optimize.ModuleConcatenationPlugin(),
     // Clean the /dist folder before adding the new files.
     new CleanWebpackPlugin(["dist"]),
     // Use the GoogleAppScript plugin to assign global functions.
     new GASWebpackPlugin()
-    // Copy the UI templates.
-    // new CopyWebpackPlugin([{ from: "./src/templates" }])
   ]
 };

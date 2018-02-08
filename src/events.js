@@ -32,30 +32,34 @@ export class Events {
   }
 
   /**
-   * The onSaveConfiguration event function which runs when the user has
-   * saved their OpenBadges configuration within the google app.
-   * @param {any} configuration
+   * The onSaveconfig event function which runs when the user has
+   * saved their OpenBadges config within the google app.
+   * @param {any} config
    * @memberof Events
    */
-  onSaveConfiguration(configuration) {
-    const propertyService = PropertiesService.getScriptProperties();
+  onSaveConfiguration(config) {
+    // TODO: Validate the provided config, throw errors if validation fails.
+
+    // Create the property model from the provided config.
     const properties = {
-      OB_API_KEY: configuration.apiKey,
-      OB_URL: configuration.openBadgesUrl,
-      OB_AUTH_TOKEN: configuration.authToken,
-      OB_ACTIVITY_ID: configuration.activityId,
-      OB_ACTIVITY_TIME: configuration.activityTime,
-      OB_USER_ID: configuration.userId,
-      OB_FIRST_NAME: configuration.firstName,
-      OB_LAST_NAME: configuration.lastName,
-      OB_TEXT_1: configuration.text1,
-      OB_TEXT_2: configuration.text2,
-      OB_EMAIL: configuration.email,
-      OB_INT_1: configuration.int1,
-      OB_INT_2: configuration.int2,
-      OB_DATE_1: configuration.date1
+      OB_API_KEY: config.apiKey,
+      OB_URL: config.openBadgesUrl,
+      OB_AUTH_TOKEN: config.authToken,
+      OB_ACTIVITY_ID: config.activityId,
+      OB_ACTIVITY_TIME: config.activityTime,
+      OB_USER_ID: config.userId,
+      OB_FIRST_NAME: config.firstName,
+      OB_LAST_NAME: config.lastName,
+      OB_TEXT_1: config.text1,
+      OB_TEXT_2: config.text2,
+      OB_EMAIL: config.email,
+      OB_INT_1: config.int1,
+      OB_INT_2: config.int2,
+      OB_DATE_1: config.date1
     };
-    propertyService.setProperties(properties);
+
+    // Save the properties so they can be used later.
+    PropertiesService.getScriptProperties().setProperties(properties);
   }
 
   /**
@@ -63,21 +67,12 @@ export class Events {
    * @memberof Events
    */
   onFormSubmit() {
-    // Get the OpenBadges configuration.
-    const propertyService = PropertiesService.getScriptProperties();
-    const keys = propertyService.getKeys();
+    // Get the script properties which should have been configured.
+    const properties = PropertiesService.getScriptProperties().getProperties();
 
-    // Stop processing If the required properties are not present,
-    if (
-      keys.indexOf("OB_API_KEY") == -1 ||
-      keys.indexOf("OB_URL") == -1 ||
-      keys.indexOf("OB_AUTH_TOKEN") == -1
-    ) {
-      return;
-    }
-
-    // Otherwise fetch the actual property values.
-    const properties = propertyService.getProperties();
+    // Stop processing if the properties needed to make a request are not set.
+    const requiredProperties = ["OB_URL", "OB_AUTH_TOKEN", "OB_API_KEY"];
+    if (!this.hasRequiredProperties(properties, requiredProperties)) return;
 
     // Build the request header.
     const headers = {
@@ -111,5 +106,18 @@ export class Events {
     // Make the request and get the response.
     const response = UrlFetchApp.fetch(properties["OB_URL"], options);
     Logger.log(response.getResponseCode());
+  }
+
+  /**
+   * Check whether the required properties were set on the
+   * provided properties object.
+   * @param {any} properties
+   * @param {string[]} propertyNames
+   * @return {boolean} result
+   * @memberof Events
+   */
+  hasRequiredProperties(properties, propertyNames) {
+    const results = propertyNames.map(name => !!properties[name]);
+    return results.every(result => result);
   }
 }

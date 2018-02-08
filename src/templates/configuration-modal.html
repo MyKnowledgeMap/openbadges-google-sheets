@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
-<!-- <style>
+<style>
   .form-group {
-    margin-bottom: 12px;
+    margin-bottom: 24px;
   }
 
   input,
@@ -12,7 +12,7 @@
 
 <form id="configuration-form">
 
-  <b>Application</b>
+  <h3>Application</h3>
   <div class="form-group">
     <label for="openBadgesUrl">OpenBadges address</label>
     <input type="text" id="openBadgesUrl" value="<?= openBadgesUrl ?>" required>
@@ -25,18 +25,18 @@
 
   <div class="form-group">
     <label for="authToken">Authorization token</label>
-    <textarea id="authToken" rows="2" style="resize: none"><?= authToken ?></textarea>
+    <textarea id="authToken" rows="4" style="resize: none" required><?= authToken ?></textarea>
   </div>
 
-  <b>Event Details</b>
+  <h3>Event Details</h3>
   <div class="form-group">
     <label for="activityId">Activity ID</label>
-    <input type="text" id="activityId" value="<?= activityId ?>">
+    <input type="text" id="activityId" value="<?= activityId ?>" required>
   </div>
 
   <div class="form-group">
     <label for="activityTime">Activity Date/Time</label>
-    <input type="date" id="activityTime" value="<?= activityTime ?>">
+    <input type="date" id="activityTime" value="<?= activityTime ?>" required>
   </div>
 
   <div class="form-group">
@@ -54,7 +54,7 @@
     <input type="text" id="lastName" value="<?= lastName ?>">
   </div>
 
-  <b>Miscellaneous</b>
+  <h3>Miscellaneous</h3>
   <div class="form-group">
     <label for="text1">Text 1</label>
     <input type="text" id="text1" value="<?= text1 ?>">
@@ -86,7 +86,9 @@
   </div>
 
   <button class="action" type="button" id="save">Save</button>
+
 </form>
+
 <script>
   function onClickSave() {
     var config = {};
@@ -104,5 +106,4 @@
   }
 
   document.getElementById('save').addEventListener('click', onClickSave);
-</script> -->
-
+</script>

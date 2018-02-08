@@ -10,38 +10,29 @@
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-jest": "^22.2.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
     "clean-webpack-plugin": "^0.1.18",
-    "copy-webpack-plugin": "^4.3.1",
+    "eslint": "^4.17.0",
     "eslint-config-google": "^0.9.1",
     "gas-webpack-plugin": "^0.2.1",
     "html-loader": "^0.5.5",
-    "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.10.0",
-    "babel-preset-env": "^1.6.1",
-    "eslint": "^4.17.0",
-    "jest": "^22.2.1"
+    "jest": "^22.2.1",
+    "webpack": "^3.10.0"
   },
   "jest": {
     "automock": true,
-    "moduleFileExtensions": [
-      "js",
-      "json"
-    ],
+    "moduleFileExtensions": ["js", "json"],
     "testRegex": "/src/.*\\.(spec).(ts|tsx|js)$",
     "collectCoverageFrom": [
       "src/*.{js,jsx,tsx,ts}",
       "!**/node_modules/**",
       "!**/vendor/**"
     ],
-    "coverageReporters": [
-      "json",
-      "lcov"
-    ]
-  },
-  "dependencies": {
-    "babel-loader": "^7.1.2"
+    "coverageReporters": ["json", "lcov"]
   }
 }

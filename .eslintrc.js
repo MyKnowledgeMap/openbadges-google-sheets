@@ -7,6 +7,7 @@ module.exports = {
   rules: {
     quotes: [2, "double", { allowTemplateLiterals: true }],
     "comma-dangle": ["error", "never"],
-    "object-curly-spacing": ["error", "always"]
+    "object-curly-spacing": ["error", "always"],
+    "arrow-parens": ["error", "as-needed"]
   }
 };
