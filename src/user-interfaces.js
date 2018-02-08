@@ -10,7 +10,7 @@ export class UserInterfaces {
    */
   showConfigurationModal() {
     const template = HtmlService.createTemplate(
-      require("./templates/configuration-modal.html")
+      require("./templates/configuration-sidebar.html")
     );
 
     const propertyService = PropertiesService.getScriptProperties();
@@ -36,6 +36,6 @@ export class UserInterfaces {
       .setHeight(600)
       .setWidth(300);
 
-    FormApp.getUi().showModalDialog(html, "Configure OpenBadges");
+    FormApp.getUi().showSidebar(html);
   }
 }

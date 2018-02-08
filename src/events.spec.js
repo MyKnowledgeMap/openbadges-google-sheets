@@ -1,6 +1,8 @@
-import * as events from "./events";
+import { Events } from "./events";
 
 describe("events", () => {
+  const events = new Events();
+
   describe("onOpen", () => {
     it("should not throw", () => {
       expect(events.onOpen).not.toThrow();

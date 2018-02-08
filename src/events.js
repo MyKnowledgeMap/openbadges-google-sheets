@@ -42,7 +42,18 @@ export class Events {
     const properties = {
       OB_API_KEY: configuration.apiKey,
       OB_URL: configuration.openBadgesUrl,
-      OB_AUTH_TOKEN: configuration.authToken
+      OB_AUTH_TOKEN: configuration.authToken,
+      OB_ACTIVITY_ID: configuration.activityId,
+      OB_ACTIVITY_TIME: configuration.activityTime,
+      OB_USER_ID: configuration.userId,
+      OB_FIRST_NAME: configuration.firstName,
+      OB_LAST_NAME: configuration.lastName,
+      OB_TEXT_1: configuration.text1,
+      OB_TEXT_2: configuration.text2,
+      OB_EMAIL: configuration.email,
+      OB_INT_1: configuration.int1,
+      OB_INT_2: configuration.int2,
+      OB_DATE_1: configuration.date1
     };
     propertyService.setProperties(properties);
   }
