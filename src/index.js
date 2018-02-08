@@ -8,4 +8,3 @@ global.onSaveConfiguration = Events.onSaveConfiguration;
 //  UI
 import * as UserInterfaces from "./user-interfaces";
 global.showConfigurationModal = UserInterfaces.showConfigurationModal;
-

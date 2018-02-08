@@ -1,7 +1,16 @@
+/**
+ * The onInstall event function which runs when the app script is installed.
+ * @export
+ */
 export function onInstall() {
   onOpen();
 }
 
+/**
+ * The onOpen event function which runs when the document/form
+ * that the app script has been installed is opened.
+ * @export
+ */
 export function onOpen() {
   // Add the config menu to the UI.
   FormApp.getUi()
@@ -14,20 +23,17 @@ export function onOpen() {
     .forForm(FormApp.getActiveForm())
     .onFormSubmit()
     .create();
-
-  onSaveConfiguration({
-    apiKey: "52KF0RSTPdmiaq7TSI0u1kHNAEpmyFNGg88QUBrB8XVUEoNLs6ffbguWcEUK",
-    authToken:
-      "7GNZSDcW996QjNkMGCa7SYEolYLeAVRfw1K97Vyh7VLvHUlP-ufpbZr0jgl4rrCNMnQTejcmUX2eRLjCn5CsJIOWHxPJIGMKMFYAtyqR5lsqm5Srt0PO3I4dSflXdFYM6SpZZaSFrgUIUZenW10iKxLmNWkLfB-o5IGCV7wKhhVRx5hgyE7daFWyTGwMQoKfzD-doP9MRNrW8CsMzRtNs_vAq4-z6cqM4jIiHcDfuZ8WkwQKwMd_UMiGIosz_ajmN81r_HXi0TtOfwUnCVW0tUlbucIifacV7sFdpPPkd8upUlxyvetbBLaUHUACzSiPIVbgK9Ti7vbVi9OAv4oeRI8s89GLO2HX5Akac_WeKthqlhgvEvY3UDMGl1nmUa1qOvEFLLXRSjsk3_bbKiZlzbSaAUmUAcd8A2QD0iG1w0D1-x99uqHD4UOMPHa9D5MzPODUaiTEC2zxb5pSfXkLDd9opt6FBSKv-Ekqf8JpO1ojQSebzoR5CWU1yaOPbA_q7Z7rtsjRAPL1e4iMIF16f3-TKP16Z1ZA4V6o4_J2bUUKV6HYPazqgekJFRBrT0lcbRCeln6kixrJ7CLPosKGoMYrdIA",
-    openBadgesUrl: "https://activityevents-dev.mkmapps.com/api/ActivityEvents/"
-  });
-
-  onFormSubmit();
 }
 
+/**
+ * The onSaveConfiguration event function which runs when the user has
+ * saved their OpenBadges configuration within the google app.
+ * @export
+ * @param {any} configuration
+ */
 export function onSaveConfiguration(configuration) {
-  var propertyService = PropertiesService.getScriptProperties();
-  var properties = {
+  const propertyService = PropertiesService.getScriptProperties();
+  const properties = {
     OB_API_KEY: configuration.apiKey,
     OB_URL: configuration.openBadgesUrl,
     OB_AUTH_TOKEN: configuration.authToken
@@ -35,10 +41,14 @@ export function onSaveConfiguration(configuration) {
   propertyService.setProperties(properties);
 }
 
+/**
+ * The onFormSubmit event function which runs when a form is submitted.
+ * @export
+ */
 export function onFormSubmit() {
   // Get the OpenBadges configuration.
-  var propertyService = PropertiesService.getScriptProperties();
-  var keys = propertyService.getKeys();
+  const propertyService = PropertiesService.getScriptProperties();
+  const keys = propertyService.getKeys();
 
   // If the required properties are not present the app script cannot continue.
   if (
@@ -50,16 +60,16 @@ export function onFormSubmit() {
   }
 
   // Otherwise fetch the actual property values.
-  var properties = propertyService.getProperties();
+  const properties = propertyService.getProperties();
 
   // Build the request header.
-  var headers = {
+  const headers = {
     Authorization: "Bearer " + properties["OB_AUTH_TOKEN"],
     ApiKey: properties["OB_API_KEY"]
   };
 
   // Build the request payload.
-  var payload = {
+  const payload = {
     activityId: "Activity ADAM",
     activityTime: "03/02/2018",
     userId: "harrymitchinson@icloud.com",
@@ -74,7 +84,7 @@ export function onFormSubmit() {
   };
 
   // Use the request headers and payload to create the fetch params.
-  var options = {
+  const options = {
     method: "post",
     contentType: "application/json",
     headers: headers,
@@ -82,6 +92,6 @@ export function onFormSubmit() {
   };
 
   // Make the request and get the response.
-  var response = UrlFetchApp.fetch(properties["OB_URL"], options);
+  const response = UrlFetchApp.fetch(properties["OB_URL"], options);
   Logger.log(response.getResponseCode());
 }

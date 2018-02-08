@@ -1,7 +1,7 @@
 {
-  "name": "openbadges-appscript",
+  "name": "gas-openbadges",
   "version": "1.0.0",
-  "description": "",
+  "description": "Google App Script for OpenBadges.me",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
@@ -13,9 +13,13 @@
   "devDependencies": {
     "clean-webpack-plugin": "^0.1.18",
     "copy-webpack-plugin": "^4.3.1",
+    "eslint-config-google": "^0.9.1",
     "gas-webpack-plugin": "^0.2.1",
+    "html-loader": "^0.5.5",
     "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.10.0",
-    "html-loader": "^0.5.5"
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {
+    "eslint": "^4.17.0"
   }
 }
