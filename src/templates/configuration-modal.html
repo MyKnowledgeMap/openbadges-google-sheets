@@ -1,0 +1,45 @@
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<style>
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  input,
+  textarea {
+    width: 100%
+  }
+</style>
+
+<form>
+  <div class="form-group">
+    <label for="apiKey">API key</label>
+    <input type="text" id="apiKey" value="<?= apiKey ?>">
+  </div>
+  <div class="form-group">
+    <label for="authToken">Authorization token</label>
+    <textarea id="authToken" rows="2" style="resize: none" value="<?= authToken ?>"></textarea>
+  </div>
+  <div class="form-group">
+    <label for="openBadgesUrl">OpenBadges address</label>
+    <input type="text" id="openBadgesUrl" value="<?= openBadgesUrl ?>">
+  </div>
+  <button class="action" type="button" id="save">Save</button>
+</form>
+<script>
+  var apiKeyInput = document.getElementById("apiKey");
+  var authTokenInput = document.getElementById("authToken");
+  var openBadgesUrlInput = document.getElementById("openBadgesUrl");
+
+  function onClickSave() {
+    var config = {
+      apiKey: apiKeyInput.value,
+      authToken: authTokenInput.value,
+      openBadgesUrl: openBadgesUrlInput.value
+    }
+    google.script.run
+      .withSuccessHandler(function () { google.script.host.close() })
+      .onSaveConfiguration(config);
+  }
+
+  document.getElementById('save').addEventListener('click', onClickSave);
+</script>
