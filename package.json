@@ -32,6 +32,9 @@
       "js",
       "json"
     ],
+    "moduleNameMapper": {
+      "^.+\\.html$": "<rootDir>/src/templates/html-mock.js"
+    },
     "testRegex": "/src/.*\\.(spec).(ts|tsx|js)$",
     "collectCoverageFrom": [
       "src/*.{js,jsx,tsx,ts}",

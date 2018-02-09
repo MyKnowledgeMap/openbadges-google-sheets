@@ -1,34 +1,25 @@
 import { EventService } from "./event.service";
-const extendGlobal = require('app-script-mock');
 
 describe("EventService", () => {
-  beforeAll(() => {
-    extendGlobal(global);
-  })
-  let formApp;
-  let scriptApp;
-  let urlFetchApp;
-  let propertiesService;
-  let logger;
   let eventService;
 
   describe("onOpen", () => {
     beforeAll(() => {
       // Arrange
-      formApp = {
+      global.FormApp = {
         getUi: jest.fn().mockReturnThis(),
         createAddonMenu: jest.fn().mockReturnThis(),
         addItem: jest.fn().mockReturnThis(),
         addToUi: jest.fn().mockReturnThis(),
         getActiveForm: jest.fn().mockReturnThis()
       };
-      scriptApp = {
+      global.ScriptApp = {
         newTrigger: jest.fn().mockReturnThis(),
         forForm: jest.fn().mockReturnThis(),
         onFormSubmit: jest.fn().mockReturnThis(),
         create: jest.fn().mockReturnThis()
       };
-      eventService = new EventService(formApp, scriptApp);
+      eventService = new EventService();
 
       // Act
       eventService.onOpen();
@@ -36,21 +27,21 @@ describe("EventService", () => {
 
     it("should provide addon menu", () => {
       // Assert
-      expect(formApp.getUi).toBeCalled();
-      expect(formApp.createAddonMenu).toBeCalled();
-      expect(formApp.addItem).toBeCalledWith(
+      expect(FormApp.getUi).toBeCalled();
+      expect(FormApp.createAddonMenu).toBeCalled();
+      expect(FormApp.addItem).toBeCalledWith(
         "Settings",
         "showConfigurationModal"
       );
-      expect(formApp.getActiveForm).toBeCalled();
+      expect(FormApp.getActiveForm).toBeCalled();
     });
 
     it("should add manual trigger for onFormSubmit", () => {
       // Assert
-      expect(scriptApp.newTrigger).toBeCalledWith("onFormSubmit");
-      expect(scriptApp.forForm).toBeCalled();
-      expect(scriptApp.onFormSubmit).toBeCalled();
-      expect(scriptApp.create).toBeCalled();
+      expect(ScriptApp.newTrigger).toBeCalledWith("onFormSubmit");
+      expect(ScriptApp.forForm).toBeCalled();
+      expect(ScriptApp.onFormSubmit).toBeCalled();
+      expect(ScriptApp.create).toBeCalled();
     });
   });
 
@@ -71,12 +62,12 @@ describe("EventService", () => {
   describe("onSaveConfiguration", () => {
     beforeAll(() => {
       // Arrange
-      propertiesService = {
+      global.PropertiesService = {
         getUserProperties: jest.fn().mockReturnThis(),
         setProperties: jest.fn()
       };
 
-      eventService = new EventService(null, null, null, propertiesService);
+      eventService = new EventService();
     });
 
     it("should access user properties", () => {
@@ -84,7 +75,7 @@ describe("EventService", () => {
       eventService.onSaveConfiguration({});
 
       // Assert
-      expect(propertiesService.getUserProperties).toBeCalled();
+      expect(PropertiesService.getUserProperties).toBeCalled();
     });
 
     it("should save properties", () => {
@@ -96,7 +87,7 @@ describe("EventService", () => {
       eventService.onSaveConfiguration(config);
 
       // Assert
-      expect(propertiesService.setProperties).toBeCalledWith({
+      expect(PropertiesService.setProperties).toBeCalledWith({
         OB_API_KEY: key
       });
     });
@@ -104,7 +95,7 @@ describe("EventService", () => {
 
   describe("onFormSubmit", () => {
     beforeEach(() => {
-      logger = {
+      global.Logger = {
         log: jest.fn()
       };
     });
@@ -113,25 +104,18 @@ describe("EventService", () => {
       it("should stop processing and log message", () => {
         // Arrange
         const props = { OB_URL: "Value1", NotRequired: "Value2" };
-        propertiesService = {
+        global.PropertiesService = {
           getUserProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue(props)
         };
-
-        eventService = new EventService(
-          null,
-          null,
-          null,
-          propertiesService,
-          logger
-        );
+        eventService = new EventService();
 
         // Act
         const result = eventService.onFormSubmit();
 
         // Assert
         expect(result).toBe(false);
-        expect(logger.log).toBeCalled();
+        expect(Logger.log).toBeCalled();
       });
     });
 
@@ -143,22 +127,16 @@ describe("EventService", () => {
           OB_AUTH_TOKEN: "Value2",
           OB_API_KEY: "Value3"
         };
-        propertiesService = {
+        global.PropertiesService = {
           getUserProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue(props)
         };
 
-        urlFetchApp = {
+        global.UrlFetchApp = {
           fetch: jest.fn().mockReturnValue(true)
         };
 
-        eventService = new EventService(
-          null,
-          null,
-          urlFetchApp,
-          propertiesService,
-          logger
-        );
+        eventService = new EventService();
 
         // Act
         const result = eventService.onFormSubmit();
@@ -179,10 +157,7 @@ describe("EventService", () => {
           B: "2"
         };
         const required = ["A", "B", "C"];
-        const result = eventService.hasRequiredProperties(
-          properties,
-          required
-        );
+        const result = eventService.hasRequiredProperties(properties, required);
         expect(result).toBe(false);
       });
     });
@@ -195,10 +170,7 @@ describe("EventService", () => {
           C: "3"
         };
         const required = ["A", "B", "C"];
-        const result = eventService.hasRequiredProperties(
-          properties,
-          required
-        );
+        const result = eventService.hasRequiredProperties(properties, required);
         expect(result).toBe(true);
       });
     });

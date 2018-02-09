@@ -1,11 +1,9 @@
 import { UiService } from "./ui.service";
+import { TemplateProvider } from "./template.provider";
 
 describe("UiService", () => {
   describe("showConfigurationModal", () => {
-    let formApp;
     let template;
-    let htmlService;
-    let templateProvider;
     let ui;
 
     beforeEach(() => {
@@ -16,20 +14,16 @@ describe("UiService", () => {
         setWidth: jest.fn().mockReturnThis()
       };
 
-      htmlService = {
+      global.HtmlService = {
         createTemplate: jest.fn().mockReturnValue(template)
       };
 
-      formApp = {
+      global.FormApp = {
         getUi: jest.fn().mockReturnThis(),
         showModalDialog: jest.fn()
       };
 
-      templateProvider = {
-        configurationModal: ""
-      };
-
-      ui = new UiService(formApp, htmlService, templateProvider);
+      ui = new UiService();
       ui.bindPropertiesToTemplate = jest.fn().mockReturnValue(template);
 
       // Act
@@ -38,8 +32,8 @@ describe("UiService", () => {
 
     it("should use configuration modal template", () => {
       // Assert
-      expect(htmlService.createTemplate).toBeCalledWith(
-        templateProvider.configurationModal
+      expect(HtmlService.createTemplate).toBeCalledWith(
+        TemplateProvider.configurationModal
       );
     });
 
@@ -57,25 +51,24 @@ describe("UiService", () => {
 
     it("should show configuration modal", () => {
       // Assert
-      expect(formApp.getUi).toBeCalled();
-      expect(formApp.showModalDialog).toBeCalled();
+      expect(FormApp.getUi).toBeCalled();
+      expect(FormApp.showModalDialog).toBeCalled();
     });
   });
 
   describe("bindPropertiesToTemplate", () => {
     const template = {};
     let ui;
-    let propertiesService;
     let boundTemplate;
 
     describe("when properties not set", () => {
       it("should set template bindings as empty strings", () => {
         // Arrange
-        propertiesService = {
+        global.PropertiesService = {
           getUserProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue({})
         };
-        ui = new UiService(null, null, null, propertiesService);
+        ui = new UiService();
 
         // Act
         boundTemplate = ui.bindPropertiesToTemplate(template);
@@ -117,11 +110,11 @@ describe("UiService", () => {
           OB_DATE_1: "Test",
           OB_EMAIL: "Test"
         };
-        propertiesService = {
+        global.PropertiesService = {
           getUserProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue(props)
         };
-        ui = new UiService(null, null, null, propertiesService);
+        ui = new UiService();
 
         // Act
         boundTemplate = ui.bindPropertiesToTemplate(template);

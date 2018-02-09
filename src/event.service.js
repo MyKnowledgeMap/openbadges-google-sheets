@@ -6,31 +6,21 @@ import { BaseService } from "./base.service";
  * @class Events
  */
 export class EventService extends BaseService {
-  constructor(formApp, scriptApp, urlFetchApp, propertiesService, logger) {
-    super(logger);
-    this.formApp = formApp;
-    this.scriptApp = scriptApp;
-    this.urlFetchApp = urlFetchApp;
-    this.propertiesService = propertiesService;
-  }
-
   /**
    * The onOpen event function hich runs when the document/form
    * that the app script has been installed is opened.
    * @memberof Events
    */
-  onOpen = () => {
+  onOpen() {
     // Add the config menu to the UI.
-    this.formApp
-      .getUi()
+    FormApp.getUi()
       .createAddonMenu()
       .addItem("Settings", "showConfigurationModal")
       .addToUi();
 
     // Add the onFormSubmit trigger manually.
-    this.scriptApp
-      .newTrigger("onFormSubmit")
-      .forForm(this.formApp.getActiveForm())
+    ScriptApp.newTrigger("onFormSubmit")
+      .forForm(FormApp.getActiveForm())
       .onFormSubmit()
       .create();
   }
@@ -39,7 +29,7 @@ export class EventService extends BaseService {
    * The onInstall event function which runs when the app script is installed.
    * @memberof Events
    */
-  onInstall = () => {
+  onInstall() {
     this.onOpen();
   }
 
@@ -49,7 +39,7 @@ export class EventService extends BaseService {
    * @param {any} config
    * @memberof Events
    */
-  onSaveConfiguration = (config) => {
+  onSaveConfiguration(config) {
     // TODO: Validate the provided config, throw errors if validation fails.
 
     // Create the property model from the provided config.
@@ -71,23 +61,22 @@ export class EventService extends BaseService {
     };
 
     // Save the properties so they can be used later.
-    this.propertiesService.getUserProperties().setProperties(properties);
+    PropertiesService.getUserProperties().setProperties(properties);
   }
 
   /**
    *  The onFormSubmit event function which runs when a form is submitted.
    * @memberof Events
+   * @return {any}
    */
-  onFormSubmit = () => {
+  onFormSubmit() {
     // Get the script properties which should have been configured.
-    const properties = this.propertiesService
-      .getUserProperties()
-      .getProperties();
+    const properties = PropertiesService.getUserProperties().getProperties();
 
     // Stop processing if the properties needed to make a request are not set.
     const requiredProperties = ["OB_URL", "OB_AUTH_TOKEN", "OB_API_KEY"];
     if (!this.hasRequiredProperties(properties, requiredProperties)) {
-      this.logger.log("Request cancelled as required properties are missing.");
+      Logger.log("Request cancelled as required properties are missing.");
       return false;
     }
 
@@ -121,7 +110,7 @@ export class EventService extends BaseService {
     };
 
     // Make the request and get the response.
-    const response = this.urlFetchApp.fetch(properties["OB_URL"], options);
+    const response = UrlFetchApp.fetch(properties["OB_URL"], options);
 
     return response;
   }
@@ -134,7 +123,7 @@ export class EventService extends BaseService {
    * @return {boolean} result
    * @memberof Events
    */
-  hasRequiredProperties = (properties, propertyNames) => {
+  hasRequiredProperties(properties, propertyNames) {
     const results = propertyNames.map(name => !!properties[name]);
     return results.every(result => result);
   }

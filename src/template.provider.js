@@ -3,8 +3,6 @@
  * @export
  * @class TemplateProvider
  */
-export class TemplateProvider {
-  constructor() {
-    this.configurationModal = require("./templates/configuration-modal.html");
-  }
-}
+export const TemplateProvider = {
+  configurationModal: require("./templates/configuration-modal.html")
+};

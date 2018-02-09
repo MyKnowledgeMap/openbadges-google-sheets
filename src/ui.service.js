@@ -1,4 +1,5 @@
 import { BaseService } from "./base.service";
+import { TemplateProvider } from "./template.provider";
 
 /**
  * The user interfaces managed by the app script.
@@ -6,27 +7,13 @@ import { BaseService } from "./base.service";
  * @class UserInterfaces
  */
 export class UiService extends BaseService {
-  constructor(
-    formApp,
-    htmlService,
-    templateProvider,
-    propertiesService,
-    logger
-  ) {
-    super(logger);
-    this.formApp = formApp;
-    this.htmlService = htmlService;
-    this.templateProvider = templateProvider;
-    this.propertiesService = propertiesService;
-  }
-
   /**
    * The showConfigurationModal user interface.
    * @memberof UserInterfaces
    */
-  showConfigurationModal = () => {
-    const template = this.htmlService.createTemplate(
-      this.templateProvider.configurationModal
+  showConfigurationModal() {
+    const template = HtmlService.createTemplate(
+      TemplateProvider.configurationModal
     );
 
     const boundTemplate = this.bindPropertiesToTemplate(template);
@@ -36,7 +23,7 @@ export class UiService extends BaseService {
       .setHeight(650)
       .setWidth(450);
 
-    this.formApp.getUi().showModalDialog(html, "Configure OpenBadges");
+    FormApp.getUi().showModalDialog(html, "Configure OpenBadges");
   }
 
   /**
@@ -45,10 +32,8 @@ export class UiService extends BaseService {
    * @return {any} boundTemplate
    * @memberof UiService
    */
-  bindPropertiesToTemplate = (template) => {
-    const properties = this.propertiesService
-      .getUserProperties()
-      .getProperties();
+  bindPropertiesToTemplate(template) {
+    const properties = PropertiesService.getUserProperties().getProperties();
 
     return {
       ...template,

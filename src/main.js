@@ -1,23 +1,12 @@
 import { EventService } from "./event.service";
 import { UiService } from "./ui.service";
-import { TemplateProvider } from "./template.provider";
 
-const events = new EventService(
-  FormApp,
-  ScriptApp,
-  UrlFetchApp,
-  PropertiesService,
-  Logger
-);
+const events = new EventService();
+const ui = new UiService();
 
-const ui = new UiService(
-  FormApp,
-  HtmlService,
-  new TemplateProvider(),
-  PropertiesService,
-  Logger
-);
-
+/**
+ * Main entry for app script.
+ */
 function bootstrap() {
   // Register the trigger events.
   global.onInstall = events.onInstall;
