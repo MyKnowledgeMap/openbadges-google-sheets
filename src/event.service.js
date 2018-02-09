@@ -1,24 +1,36 @@
+import { BaseService } from "./base.service";
+
 /**
  * The app script events used by triggers.
  * @export
  * @class Events
  */
-export class Events {
+export class EventService extends BaseService {
+  constructor(formApp, scriptApp, urlFetchApp, propertiesService, logger) {
+    super(logger);
+    this.formApp = formApp;
+    this.scriptApp = scriptApp;
+    this.urlFetchApp = urlFetchApp;
+    this.propertiesService = propertiesService;
+  }
+
   /**
-   * The onOpen event function which runs when the document/form
+   * The onOpen event function hich runs when the document/form
    * that the app script has been installed is opened.
    * @memberof Events
    */
   onOpen() {
     // Add the config menu to the UI.
-    FormApp.getUi()
+    this.formApp
+      .getUi()
       .createAddonMenu()
       .addItem("Settings", "showConfigurationModal")
       .addToUi();
 
     // Add the onFormSubmit trigger manually.
-    ScriptApp.newTrigger("onFormSubmit")
-      .forForm(FormApp.getActiveForm())
+    this.scriptApp
+      .newTrigger("onFormSubmit")
+      .forForm(this.formApp.getActiveForm())
       .onFormSubmit()
       .create();
   }
@@ -59,7 +71,7 @@ export class Events {
     };
 
     // Save the properties so they can be used later.
-    PropertiesService.getScriptProperties().setProperties(properties);
+    this.propertiesService.getUserProperties().setProperties(properties);
   }
 
   /**
@@ -68,11 +80,16 @@ export class Events {
    */
   onFormSubmit() {
     // Get the script properties which should have been configured.
-    const properties = PropertiesService.getScriptProperties().getProperties();
+    const properties = this.propertiesService
+      .getUserProperties()
+      .getProperties();
 
     // Stop processing if the properties needed to make a request are not set.
     const requiredProperties = ["OB_URL", "OB_AUTH_TOKEN", "OB_API_KEY"];
-    if (!this.hasRequiredProperties(properties, requiredProperties)) return;
+    if (!this.hasRequiredProperties(properties, requiredProperties)) {
+      this.logger.log("Request cancelled as required properties are missing.");
+      return false;
+    }
 
     // Build the request header.
     const headers = {
@@ -104,8 +121,9 @@ export class Events {
     };
 
     // Make the request and get the response.
-    const response = UrlFetchApp.fetch(properties["OB_URL"], options);
-    Logger.log(response.getResponseCode());
+    const response = this.urlFetchApp.fetch(properties["OB_URL"], options);
+
+    return response;
   }
 
   /**

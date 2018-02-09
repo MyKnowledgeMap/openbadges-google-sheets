@@ -1,12 +1,12 @@
 const path = require("path");
 const webpack = require("webpack");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
 const GASWebpackPlugin = require("gas-webpack-plugin");
+const FileManagerPlugin = require("filemanager-webpack-plugin");
 
 module.exports = {
-  entry: [path.join(__dirname, "src/index.js")],
+  entry: [path.join(__dirname, "src/main.js")],
   output: {
-    filename: "OpenBadges.gs",
+    filename: "OpenBadges.js",
     libraryTarget: "this",
     path: path.join(__dirname, "dist")
   },
@@ -21,7 +21,8 @@ module.exports = {
         exclude: [/node_modules/],
         loader: "babel-loader",
         options: {
-          presets: [["env", { modules: false }]]
+          presets: [["env", { modules: false }]],
+          plugins: ["transform-object-rest-spread"]
         }
       },
       {
@@ -30,7 +31,7 @@ module.exports = {
           {
             loader: "html-loader",
             options: {
-              minimize: true
+              minimize: false
             }
           }
         ]
@@ -39,8 +40,21 @@ module.exports = {
   },
   plugins: [
     new webpack.optimize.ModuleConcatenationPlugin(),
-    // Clean the /dist folder before adding the new files.
-    new CleanWebpackPlugin(["dist"]),
+
+    new FileManagerPlugin({
+      onStart: {
+        delete: ["./dist"]
+      },
+      onEnd: {
+        copy: [
+          {
+            source: "./dist/OpenBadges.js",
+            destination: "./dist/OpenBadges.gs"
+          }
+        ]
+      }
+    }),
+
     // Use the GoogleAppScript plugin to assign global functions.
     new GASWebpackPlugin()
   ]

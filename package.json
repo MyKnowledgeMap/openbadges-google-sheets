@@ -15,24 +15,30 @@
     "babel-core": "^6.26.0",
     "babel-jest": "^22.2.0",
     "babel-loader": "^7.1.2",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "clean-webpack-plugin": "^0.1.18",
     "eslint": "^4.17.0",
     "eslint-config-google": "^0.9.1",
+    "filemanager-webpack-plugin": "^1.0.23",
     "gas-webpack-plugin": "^0.2.1",
     "html-loader": "^0.5.5",
     "jest": "^22.2.1",
     "webpack": "^3.10.0"
   },
   "jest": {
-    "automock": true,
-    "moduleFileExtensions": ["js", "json"],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
     "testRegex": "/src/.*\\.(spec).(ts|tsx|js)$",
     "collectCoverageFrom": [
       "src/*.{js,jsx,tsx,ts}",
       "!**/node_modules/**",
       "!**/vendor/**"
     ],
-    "coverageReporters": ["json", "lcov"]
+    "coverageReporters": [
+      "json",
+      "lcov"
+    ]
   }
 }
