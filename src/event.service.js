@@ -1,11 +1,11 @@
-import { BaseService } from "./base.service";
+import { Helpers } from "./helpers";
 
 /**
  * The app script events used by triggers.
  * @export
  * @class Events
  */
-export class EventService extends BaseService {
+export class EventService {
   /**
    * The onOpen event function hich runs when the document/form
    * that the app script has been installed is opened.
@@ -75,7 +75,7 @@ export class EventService extends BaseService {
 
     // Stop processing if the properties needed to make a request are not set.
     const requiredProperties = ["OB_URL", "OB_AUTH_TOKEN", "OB_API_KEY"];
-    if (!this.hasRequiredProperties(properties, requiredProperties)) {
+    if (!Helpers.hasRequiredProperties(properties, requiredProperties)) {
       Logger.log("Request cancelled as required properties are missing.");
       return false;
     }
@@ -113,18 +113,5 @@ export class EventService extends BaseService {
     const response = UrlFetchApp.fetch(properties["OB_URL"], options);
 
     return response;
-  }
-
-  /**
-   * Check whether the required properties were set on the
-   * provided properties object.
-   * @param {any} properties
-   * @param {string[]} propertyNames
-   * @return {boolean} result
-   * @memberof Events
-   */
-  hasRequiredProperties(properties, propertyNames) {
-    const results = propertyNames.map(name => !!properties[name]);
-    return results.every(result => result);
   }
 }

@@ -1,8 +1,7 @@
 /**
  * Provider for HTML templates.
  * @export
- * @class TemplateProvider
  */
-export const TemplateProvider = {
+export const Templates = {
   configurationModal: require("./templates/configuration-modal.html")
 };

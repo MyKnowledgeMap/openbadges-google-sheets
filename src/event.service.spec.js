@@ -146,33 +146,4 @@ describe("EventService", () => {
       });
     });
   });
-
-  describe("hasRequiredProperties", () => {
-    eventService = new EventService();
-
-    describe("when missing provided property names", () => {
-      it("should return false", () => {
-        const properties = {
-          A: "1",
-          B: "2"
-        };
-        const required = ["A", "B", "C"];
-        const result = eventService.hasRequiredProperties(properties, required);
-        expect(result).toBe(false);
-      });
-    });
-
-    describe("when has provided property names", () => {
-      it("should return true", () => {
-        const properties = {
-          A: "1",
-          B: "2",
-          C: "3"
-        };
-        const required = ["A", "B", "C"];
-        const result = eventService.hasRequiredProperties(properties, required);
-        expect(result).toBe(true);
-      });
-    });
-  });
 });
