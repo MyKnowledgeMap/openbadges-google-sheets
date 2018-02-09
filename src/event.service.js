@@ -19,7 +19,7 @@ export class EventService extends BaseService {
    * that the app script has been installed is opened.
    * @memberof Events
    */
-  onOpen() {
+  onOpen = () => {
     // Add the config menu to the UI.
     this.formApp
       .getUi()
@@ -39,7 +39,7 @@ export class EventService extends BaseService {
    * The onInstall event function which runs when the app script is installed.
    * @memberof Events
    */
-  onInstall() {
+  onInstall = () => {
     this.onOpen();
   }
 
@@ -49,7 +49,7 @@ export class EventService extends BaseService {
    * @param {any} config
    * @memberof Events
    */
-  onSaveConfiguration(config) {
+  onSaveConfiguration = (config) => {
     // TODO: Validate the provided config, throw errors if validation fails.
 
     // Create the property model from the provided config.
@@ -78,7 +78,7 @@ export class EventService extends BaseService {
    *  The onFormSubmit event function which runs when a form is submitted.
    * @memberof Events
    */
-  onFormSubmit() {
+  onFormSubmit = () => {
     // Get the script properties which should have been configured.
     const properties = this.propertiesService
       .getUserProperties()
@@ -134,7 +134,7 @@ export class EventService extends BaseService {
    * @return {boolean} result
    * @memberof Events
    */
-  hasRequiredProperties(properties, propertyNames) {
+  hasRequiredProperties = (properties, propertyNames) => {
     const results = propertyNames.map(name => !!properties[name]);
     return results.every(result => result);
   }

@@ -1,6 +1,10 @@
 import { EventService } from "./event.service";
+const extendGlobal = require('app-script-mock');
 
 describe("EventService", () => {
+  beforeAll(() => {
+    extendGlobal(global);
+  })
   let formApp;
   let scriptApp;
   let urlFetchApp;

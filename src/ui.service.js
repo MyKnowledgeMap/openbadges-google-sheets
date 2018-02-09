@@ -24,7 +24,7 @@ export class UiService extends BaseService {
    * The showConfigurationModal user interface.
    * @memberof UserInterfaces
    */
-  showConfigurationModal() {
+  showConfigurationModal = () => {
     const template = this.htmlService.createTemplate(
       this.templateProvider.configurationModal
     );
@@ -45,7 +45,7 @@ export class UiService extends BaseService {
    * @return {any} boundTemplate
    * @memberof UiService
    */
-  bindPropertiesToTemplate(template) {
+  bindPropertiesToTemplate = (template) => {
     const properties = this.propertiesService
       .getUserProperties()
       .getProperties();
