@@ -3,29 +3,24 @@
   "version": "1.0.0",
   "description": "Google App Script for OpenBadges.me",
   "scripts": {
-    "test": "jest",
-    "build": "webpack",
-    "watch": "webpack --watch --progress",
-    "build:prod": "webpack --production"
+    "test": "jest --no-cache --collectCoverage",
+    "build": "./node_modules/.bin/babel src/app.js --out-file dist/app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "app-script-mock": "^1.0.3",
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
-    "babel-jest": "^22.2.0",
-    "babel-loader": "^7.1.2",
+    "babel-jest": "^22.2.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-html-import-to-string": "0.0.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-remove-export": "^1.0.0",
     "babel-preset-env": "^1.6.1",
     "eslint": "^4.17.0",
     "eslint-config-google": "^0.9.1",
-    "filemanager-webpack-plugin": "^1.0.23",
-    "gas-webpack-plugin": "^0.2.1",
-    "html-loader": "^0.5.5",
-    "jest": "^22.2.1",
-    "webpack": "^3.10.0"
+    "jest": "^22.2.1"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -33,11 +28,13 @@
       "json"
     ],
     "moduleNameMapper": {
-      "^.+\\.html$": "<rootDir>/src/templates/html-mock.js"
+      "^.+\\.html$": "<rootDir>/src/templates/html.mock.js"
     },
     "testRegex": "/src/.*\\.(spec).(ts|tsx|js)$",
     "collectCoverageFrom": [
       "src/*.{js,jsx,tsx,ts}",
+      "!**/*.spec.*",
+      "!**/*.mock.*",
       "!**/node_modules/**",
       "!**/vendor/**"
     ],

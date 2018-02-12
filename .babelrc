@@ -1,4 +1,21 @@
 {
-  "presets": ["env"],
-  "plugins": ["transform-object-rest-spread", "transform-class-properties"]
+  "plugins": [
+    "transform-object-rest-spread",
+    "transform-class-properties",
+    "transform-html-import-to-string"
+  ],
+  "env": {
+    "test": {
+      "presets": [["env", { "modules": "commonjs" }]]
+    },
+    "development": {
+      "presets": [["env", { "modules": false }]],
+      "plugins": [
+        "transform-remove-export" 
+      ],
+      "ignore": ["**/*.spec.js", "**/*.mock.js"]
+    }
+  },
+  "sourceMaps": "both"
+  
 }
