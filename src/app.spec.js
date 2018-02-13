@@ -1,3 +1,6 @@
+/* global describe beforeEach jest expect it FormApp ScriptApp
+PropertiesService Logger HtmlService Session MailApp */
+
 import { templates } from "./app";
 
 describe("OpenBadges", () => {
@@ -6,8 +9,9 @@ describe("OpenBadges", () => {
   beforeEach(() => {
     jest.resetAllMocks();
     jest.resetModules();
+
     // Use require so reset modules works.
-    app = require("./app").app;
+    app = require("./app").app; // eslint-disable-line
   });
 
   describe("onOpen", () => {
@@ -35,10 +39,7 @@ describe("OpenBadges", () => {
       // Assert
       expect(FormApp.getUi).toBeCalled();
       expect(FormApp.createAddonMenu).toBeCalled();
-      expect(FormApp.addItem).toBeCalledWith(
-        "Settings",
-        "showConfigurationModal"
-      );
+      expect(FormApp.addItem).toBeCalledWith("Settings", "showConfigurationModal");
       expect(FormApp.getActiveForm).toBeCalled();
     });
 
@@ -242,8 +243,7 @@ describe("OpenBadges", () => {
         const properties = {
           getProperty: key => properties[key],
           setProperty: (key, value) => (properties[key] = value),
-          lastAuthEmailDate: (d =>
-            new Date(d.setDate(d.getDate() - 1)).toDateString())(new Date())
+          lastAuthEmailDate: (d => new Date(d.setDate(d.getDate() - 1)).toDateString())(new Date())
         };
         global.PropertiesService = {
           getUserProperties: () => properties
@@ -275,9 +275,7 @@ describe("OpenBadges", () => {
 
         // Assert
         expect(result).toBe(true);
-        expect(HtmlService.createTemplate).toBeCalledWith(
-          templates.authorizationEmail
-        );
+        expect(HtmlService.createTemplate).toBeCalledWith(templates.authorizationEmail);
         expect(Session.getEmail).toBeCalled();
         expect(MailApp.sendEmail.mock.calls[0].length).toBe(4);
         expect(properties.lastAuthEmailDate).toBe(new Date().toDateString());
@@ -316,9 +314,7 @@ describe("OpenBadges", () => {
 
     it("should use configuration modal template", () => {
       // Assert
-      expect(HtmlService.createTemplate).toBeCalledWith(
-        templates.configurationModal
-      );
+      expect(HtmlService.createTemplate).toBeCalledWith(templates.configurationModal);
     });
 
     it("should create html output from template", () => {

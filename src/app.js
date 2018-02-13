@@ -1,5 +1,63 @@
+/* global PropertiesService FormApp ScriptApp Logger UrlFetchApp HtmlService Session MailApp */
+
+// Import HTML templates.
+import configurationModalTemplate from "./templates/configuration-modal.html";
+import authorizationEmailTemplate from "./templates/authorization-email.html";
+
+// HTML template container.
+const templates = {
+  configurationModal: configurationModalTemplate,
+  authorizationEmail: authorizationEmailTemplate
+};
+
 // Application container.
 const app = {
+  /**
+   * Fetches the user properties and binds them to the provided template.
+   * @param {any} template
+   * @return {any} template
+   */
+  bindPropertiesToTemplate: template => {
+    // Get the user properties.
+    const properties = PropertiesService.getUserProperties().getProperties();
+
+    /*
+    Bind the properties to the template. Would be ideal to use the spread operator
+    and make this function immutable however the template object needs a deep copy
+    to get all required properties and functions.
+    */
+    /* eslint-disable no-param-reassign */
+    template.apiKey = properties.apiKey || "";
+    template.authToken = properties.authToken || "";
+    template.openBadgesUrl = properties.apiUrl || "";
+    template.activityId = properties.activityId || "";
+    template.activityTime = properties.activityTime || "";
+    template.firstName = properties.firstName || "";
+    template.lastName = properties.lastName || "";
+    template.userId = properties.userId || "";
+    template.text1 = properties.text1 || "";
+    template.text2 = properties.text2 || "";
+    template.email = properties.email || "";
+    template.int1 = properties.int1 || "";
+    template.int2 = properties.int2 || "";
+    template.date1 = properties.date1 || "";
+    /* eslint-enable no-param-reassign */
+
+    return template;
+  },
+
+  /**
+   * Check whether the required properties were set on the
+   * provided properties object.
+   * @param {any} properties
+   * @param {string[]} propertyNames
+   * @return {boolean} result
+   */
+  hasRequiredProperties: (properties, propertyNames) => {
+    const results = propertyNames.map(name => !!properties[name]);
+    return results.every(result => result);
+  },
+
   /**
    * The onOpen event function hich runs when the document/form
    * that the app script has been installed is opened.
@@ -61,10 +119,7 @@ const app = {
   onFormSubmit: () => {
     // Check whether authorization is required for this trigger event.
     const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-    if (
-      authInfo.getAuthorizationStatus() ==
-      ScriptApp.AuthorizationStatus.REQUIRED
-    ) {
+    if (authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED) {
       return app.onAuthorizationRequired(authInfo);
     }
 
@@ -73,42 +128,42 @@ const app = {
 
     // Stop processing if the properties needed to make a request are not set.
     const requiredProperties = ["apiUrl", "authToken", "apiKey"];
-    if (!hasRequiredProperties(properties, requiredProperties)) {
+    if (!app.hasRequiredProperties(properties, requiredProperties)) {
       Logger.log("Request cancelled as required properties are missing.");
       return false;
     }
 
     // Build the request header.
     const headers = {
-      Authorization: "Bearer " + properties["authToken"],
-      ApiKey: properties["apiKey"]
+      Authorization: `Bearer ${properties.authToken}`,
+      ApiKey: properties.apiKey
     };
 
     // Build the request payload.
     const payload = {
-      activityId: properties["activityId"],
-      activityTime: properties["activityTime"],
-      userId: properties["userId"],
-      text1: properties["text1"],
-      text2: properties["text2"],
-      firstName: properties["firstName"],
-      lastName: properties["lastName"],
-      email: properties["email"],
-      int1: properties["int1"],
-      int2: properties["int2"],
-      date1: properties["date1"]
+      activityId: properties.activityId,
+      activityTime: properties.activityTime,
+      userId: properties.userId,
+      text1: properties.text1,
+      text2: properties.text2,
+      firstName: properties.firstName,
+      lastName: properties.lastName,
+      email: properties.email,
+      int1: properties.int1,
+      int2: properties.int2,
+      date1: properties.date1
     };
 
     // Use the request headers and payload to create the request params.
     const options = {
       method: "post",
       contentType: "application/json",
-      headers: headers,
+      headers,
       payload: JSON.stringify(payload)
     };
 
     // Make the request and get the response.
-    const response = UrlFetchApp.fetch(properties["apiUrl"], options);
+    const response = UrlFetchApp.fetch(properties.apiUrl, options);
 
     return response;
   },
@@ -118,7 +173,7 @@ const app = {
    * and send a new email if required containing the reauthorization link.
    */
   onAuthorizationRequired: authInfo => {
-    if (MailApp.getRemainingDailyQuota() == 0) {
+    if (MailApp.getRemainingDailyQuota() === 0) {
       return Logger.log("Daily email quota has been reached.");
     }
 
@@ -127,7 +182,7 @@ const app = {
     const todayDate = new Date().toDateString();
 
     // Check whether the user has already received an email for reauth today.
-    if (lastAuthEmailDate == todayDate) {
+    if (lastAuthEmailDate === todayDate) {
       return false;
     }
 
@@ -145,6 +200,8 @@ const app = {
       htmlBody: body
     };
     MailApp.sendEmail(recipient, subject, body, options);
+
+    // Update the lastAuthEmailDate property.
     properties.setProperty("lastAuthEmailDate", todayDate);
     return true;
   },
@@ -153,77 +210,36 @@ const app = {
    * The showConfigurationModal user interface.
    */
   showConfigurationModal: () => {
+    // Create the app template from the HTML template.
     const template = HtmlService.createTemplate(templates.configurationModal);
 
+    // Add the bound properties to the template.
     const boundTemplate = app.bindPropertiesToTemplate(template);
 
+    // Evaluate the template to HTML so bindings are rendered.
     const html = boundTemplate
       .evaluate()
       .setHeight(650)
       .setWidth(450);
 
+    // Create the modalDialog from the HTML.
     FormApp.getUi().showModalDialog(html, "Configure OpenBadges");
-  },
-
-  /**
-   * Fetches the user properties and binds them to the provided template.
-   * @param {any} template
-   * @return {any} template
-   */
-  bindPropertiesToTemplate: template => {
-    // Get the user properties.
-    const properties = PropertiesService.getUserProperties().getProperties();
-
-    // Bind the properties to the template.
-    template.apiKey = properties["apiKey"] || "";
-    template.authToken = properties["authToken"] || "";
-    template.openBadgesUrl = properties["apiUrl"] || "";
-    template.activityId = properties["activityId"] || "";
-    template.activityTime = properties["activityTime"] || "";
-    template.firstName = properties["firstName"] || "";
-    template.lastName = properties["lastName"] || "";
-    template.userId = properties["userId"] || "";
-    template.text1 = properties["text1"] || "";
-    template.text2 = properties["text2"] || "";
-    template.email = properties["email"] || "";
-    template.int1 = properties["int1"] || "";
-    template.int2 = properties["int2"] || "";
-    template.date1 = properties["date1"] || "";
-
-    return template;
-  },
-
-  /**
-   * Check whether the required properties were set on the
-   * provided properties object.
-   * @param {any} properties
-   * @param {string[]} propertyNames
-   * @return {boolean} result
-   */
-  hasRequiredProperties: (properties, propertyNames) => {
-    const results = propertyNames.map(name => !!properties[name]);
-    return results.every(result => result);
   }
 };
 
-// Import HTML templates.
-import configurationModalTemplate from "./templates/configuration-modal.html";
-import authorizationEmailTemplate from "./templates/authorization-email.html";
-
-// Provider for HTML templates.
-const templates = {
-  configurationModal: configurationModalTemplate,
-  authorizationEmail: authorizationEmailTemplate
-};
-
+/* eslint-disable no-unused-vars */
 // Assign the container functions to global variables so GAS can access them.
-const onOpen = app.onOpen;
-const onInstall = app.onInstall;
-const onSaveConfiguration = app.onSaveConfiguration;
-const onFormSubmit = app.onFormSubmit;
-const onAuthorizationRequired = app.onAuthorizationRequired;
-const showConfigurationModal = app.showConfigurationModal;
-const bindPropertiesToTemplate = app.bindPropertiesToTemplate;
-const hasRequiredProperties = app.hasRequiredProperties;
+const {
+  onOpen,
+  onInstall,
+  onSaveConfiguration,
+  onFormSubmit,
+  onAuthorizationRequired,
+  showConfigurationModal,
+  bindPropertiesToTemplate,
+  hasRequiredProperties
+} = app;
+/* eslint-enable no-unused-vars */
 
+// Exports are only for testing purposes, these are removed during the build process.
 export { app, templates };

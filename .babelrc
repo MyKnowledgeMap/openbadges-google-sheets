@@ -10,12 +10,10 @@
     },
     "development": {
       "presets": [["env", { "modules": false }]],
-      "plugins": [
-        "transform-remove-export" 
-      ],
+      "plugins": ["transform-remove-export"],
       "ignore": ["**/*.spec.js", "**/*.mock.js"]
     }
   },
-  "sourceMaps": "both"
-  
+  "sourceMaps": "both",
+  "comments": false
 }
