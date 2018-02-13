@@ -1,109 +1,137 @@
-<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
-<style>
-  .form-group {
-    margin-bottom: 24px;
-  }
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 
-  input,
-  textarea {
-    width: 100%
+<style>
+  .branding-below {
+    bottom: 56px;
+    top: 0;
+  }
+  form {
+    padding: 12px;
   }
 </style>
 
+<!-- Simple Textfield -->
 <form id="configuration-form">
-
-  <h3>Application</h3>
-  <div class="form-group">
-    <label for="openBadgesUrl">OpenBadges address</label>
-    <input type="text" id="openBadgesUrl" value="<?= openBadgesUrl ?>" required>
+  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <input class="mdl-textfield__input" type="url" id="openBadgesUrl" required value="<?= openBadgesUrl ?>">
+    <label class="mdl-textfield__label" for="openBadgesUrl">API end-point</label>
+    <span class="mdl-textfield__error">Required. Must be valid URL.</span>
   </div>
 
-  <div class="form-group">
-    <label for="apiKey">API key</label>
-    <input type="text" id="apiKey" value="<?= apiKey ?>" required>
+  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <input class="mdl-textfield__input" type="text" id="apiKey" required value="<?= apiKey ?>">
+    <label class="mdl-textfield__label" for="apiKey">API key</label>
+    <span class="mdl-textfield__error">Required.</span>
   </div>
 
-  <div class="form-group">
-    <label for="authToken">Authorization token</label>
-    <textarea id="authToken" rows="4" style="resize: none" required><?= authToken ?></textarea>
+  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <textarea class="mdl-textfield__input" type="text" rows="3" id="authToken" required><?= authToken ?></textarea>
+    <label class="mdl-textfield__label" for="authToken">API Token</label>
+    <span class="mdl-textfield__error">Required.</span>
   </div>
 
-  <h3>Event Details</h3>
-  <div class="form-group">
-    <label for="activityId">Activity ID</label>
-    <input type="text" id="activityId" value="<?= activityId ?>" required>
+  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <input class="mdl-textfield__input" type="text" id="activityId" required value="<?= activityId ?>" maxlength="100">
+    <label class="mdl-textfield__label" for="activityId">Activity ID</label>
+    <span class="mdl-textfield__error">Required. Max 100 characters.</span>
   </div>
 
-  <div class="form-group">
-    <label for="activityTime">Activity Date/Time</label>
-    <input type="date" id="activityTime" value="<?= activityTime ?>" required>
+  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <input class="mdl-textfield__input" type="text" id="activityId" required value="<?= activityId ?>" maxlength="100">
+    <label class="mdl-textfield__label" for="activityId">Activity ID</label>
+    <span class="mdl-textfield__error">Required. Max 100 characters.</span>
   </div>
 
-  <div class="form-group">
-    <label for="userId">User ID</label>
-    <input type="text" id="userId" value="<?= userId ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="firstName">First Name</label>
-    <input type="text" id="firstName" value="<?= firstName ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="lastName">Last Name</label>
-    <input type="text" id="lastName" value="<?= lastName ?>">
-  </div>
-
-  <h3>Miscellaneous</h3>
-  <div class="form-group">
-    <label for="text1">Text 1</label>
-    <input type="text" id="text1" value="<?= text1 ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="text2">Text 2</label>
-    <input type="text" id="text2" value="<?= text2 ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="email">Email</label>
-    <input type="email" id="email" value="<?= email ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="int1">Integer 1</label>
-    <input type="number" id="int1" value="<?= int1 ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="int2">Integer 2</label>
-    <input type="number" id="int2" value="<?= int2 ?>">
-  </div>
-
-  <div class="form-group">
-    <label for="date1">Date 1</label>
-    <input type="date" id="date1" value="<?= date1 ?>">
-  </div>
-
-  <button class="action" type="button" id="save">Save</button>
-
+  <!--   <div class="mdl-textfield mdl-js-textfield">
+    <input class="mdl-textfield__input" type="date" id="activityTime" required value="<?= activityTime ?>">
+    <label class="mdl-textfield__label" for="activityTime">Activity Date/Time</label>
+    <span class="mdl-textfield__error">Required.</span>
+  </div> -->
+  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" id="save" type="submit">
+    Save
+  </button>
 </form>
 
+
+
+
+
+
+<!-- 
+<div class="sidebar branding-below">
+
+  <form id="configuration-form">
+
+
+    <div class="block form-group">
+      <label for="userId">User ID</label>
+      <input type="text" id="userId" value="<?= userId ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="firstName">First Name</label>
+      <input type="text" id="firstName" value="<?= firstName ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="lastName">Last Name</label>
+      <input type="text" id="lastName" value="<?= lastName ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="text1">Text 1</label>
+      <input type="text" id="text1" value="<?= text1 ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="text2">Text 2</label>
+      <input type="text" id="text2" value="<?= text2 ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" value="<?= email ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="int1">Integer 1</label>
+      <input type="number" id="int1" value="<?= int1 ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="int2">Integer 2</label>
+      <input type="number" id="int2" value="<?= int2 ?>">
+    </div>
+
+    <div class="block form-group">
+      <label for="date1">Date 1</label>
+      <input type="date" id="date1" value="<?= date1 ?>">
+    </div>
+
+  </form>
+</div>
+
+<div class="sidebar bottom">
+  <button id="save" class="blue">Save</button>
+</div> -->
+
+
 <script>
-  function onClickSave() {
-    var config = {};
-
+  (function () {
     var form = document.getElementById('configuration-form');
-
-    for (var i = 0; i < form.elements.length; i++) {
-      var current = form.elements[i];
-      config[current.id] = current.value;
+    function onClickSave() {
+      var config = {};
+      for (var i = 0; i < form.elements.length; i++) {
+        var current = form.elements[i];
+        config[current.id] = current.value;
+      }
+      google.script.run
+        .withSuccessHandler(function () { google.script.host.close() })
+        .onSaveConfiguration(config);
     }
+    form.addEventListener('submit', onClickSave);
+  })();
 
-    google.script.run
-      .withSuccessHandler(function () { google.script.host.close() })
-      .onSaveConfiguration(config);
-  }
-
-  document.getElementById('save').addEventListener('click', onClickSave);
 </script>

@@ -1,5 +1,5 @@
-/* global describe beforeEach jest expect it FormApp ScriptApp
-PropertiesService Logger HtmlService Session MailApp */
+/* global describe beforeEach jest expect beforeAll it FormApp ScriptApp
+PropertiesService Logger HtmlService Session MailApp UrlFetchApp  */
 
 import { templates } from "./app";
 
@@ -102,7 +102,7 @@ describe("OpenBadges", () => {
 
   describe("onFormSubmit", () => {
     beforeEach(() => {
-      jest.resetAllMocks();
+      // jest.resetAllMocks();
       app.onAuthorizationRequired = jest.fn();
 
       global.Logger = {
@@ -165,7 +165,8 @@ describe("OpenBadges", () => {
       });
 
       describe("when all required properties exist", () => {
-        it("should make request to activity event API", () => {
+        let event;
+        beforeEach(() => {
           // Arrange
           const props = {
             apiUrl: "Value1",
@@ -180,12 +181,37 @@ describe("OpenBadges", () => {
           global.UrlFetchApp = {
             fetch: jest.fn().mockReturnValue(true)
           };
+          event = {
+            source: {
+              shortenFormUrl: jest.fn(),
+              getPublishedUrl: jest.fn()
+            },
+            response: {
+              getTimestamp: jest.fn(),
+              getRespondentEmail: jest.fn()
+            }
+          };
+        });
 
+        it("should consume event source form object", () => {
           // Act
-          const result = app.onFormSubmit();
-
+          app.onFormSubmit(event);
           // Assert
-          expect(result).toBe(true);
+          expect(event.source.getPublishedUrl).toBeCalled();
+          expect(event.source.shortenFormUrl).toBeCalled();
+        });
+        it("should consume event response object", () => {
+          // Act
+          app.onFormSubmit(event);
+          // Assert
+          expect(event.response.getTimestamp).toBeCalled();
+          expect(event.response.getRespondentEmail).toBeCalled();
+        });
+        it("should make request to activity event API", () => {
+          // Act
+          app.onFormSubmit(event);
+          // Assert
+          expect(UrlFetchApp.fetch).toBeCalled();
         });
       });
     });
@@ -305,7 +331,7 @@ describe("OpenBadges", () => {
 
       global.FormApp = {
         getUi: jest.fn().mockReturnThis(),
-        showModalDialog: jest.fn()
+        showSidebar: jest.fn()
       };
 
       // Act
@@ -327,7 +353,7 @@ describe("OpenBadges", () => {
     it("should show configuration modal", () => {
       // Assert
       expect(FormApp.getUi).toBeCalled();
-      expect(FormApp.showModalDialog).toBeCalled();
+      expect(FormApp.showSidebar).toBeCalled();
     });
   });
 

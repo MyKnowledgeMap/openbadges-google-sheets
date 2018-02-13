@@ -42,7 +42,6 @@ const app = {
     template.int2 = properties.int2 || "";
     template.date1 = properties.date1 || "";
     /* eslint-enable no-param-reassign */
-
     return template;
   },
 
@@ -116,7 +115,7 @@ const app = {
   /**
    *  The onFormSubmit event function which runs when a form is submitted.
    */
-  onFormSubmit: () => {
+  onFormSubmit: $event => {
     // Check whether authorization is required for this trigger event.
     const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
     if (authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED) {
@@ -133,6 +132,9 @@ const app = {
       return false;
     }
 
+    // Get the original form and form response from the event.
+    const { source: form, response } = $event;
+
     // Build the request header.
     const headers = {
       Authorization: `Bearer ${properties.authToken}`,
@@ -142,13 +144,13 @@ const app = {
     // Build the request payload.
     const payload = {
       activityId: properties.activityId,
-      activityTime: properties.activityTime,
-      userId: properties.userId,
+      activityTime: response.getTimestamp().toUTCString(),
+      // userId: properties.userId,
       text1: properties.text1,
-      text2: properties.text2,
-      firstName: properties.firstName,
-      lastName: properties.lastName,
-      email: properties.email,
+      text2: form.shortenFormUrl(form.getPublishedUrl()),
+      // firstName: properties.firstName,
+      // lastName: properties.lastName,
+      email: response.getRespondentEmail(),
       int1: properties.int1,
       int2: properties.int2,
       date1: properties.date1
@@ -163,9 +165,9 @@ const app = {
     };
 
     // Make the request and get the response.
-    const response = UrlFetchApp.fetch(properties.apiUrl, options);
+    const apiResult = UrlFetchApp.fetch(properties.apiUrl, options);
 
-    return response;
+    return apiResult;
   },
 
   /**
@@ -223,7 +225,7 @@ const app = {
       .setWidth(450);
 
     // Create the modalDialog from the HTML.
-    FormApp.getUi().showModalDialog(html, "Configure OpenBadges");
+    FormApp.getUi().showSidebar(html);
   }
 };
 
