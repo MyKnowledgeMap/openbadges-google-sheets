@@ -1,12 +1,17 @@
-import { app, templates } from "./app";
+import { templates } from "./app";
 
 describe("OpenBadges", () => {
+  let app;
+
   beforeEach(() => {
+    jest.resetAllMocks();
     jest.resetModules();
+    // Use require so reset modules works.
+    app = require("./app").app;
   });
 
   describe("onOpen", () => {
-    beforeAll(() => {
+    beforeEach(() => {
       // Arrange
       global.FormApp = {
         getUi: jest.fn().mockReturnThis(),
@@ -21,13 +26,12 @@ describe("OpenBadges", () => {
         onFormSubmit: jest.fn().mockReturnThis(),
         create: jest.fn().mockReturnThis()
       };
-
-
-      // Act
-      app.onOpen();
     });
 
     it("should provide addon menu", () => {
+      // Act
+      app.onOpen();
+
       // Assert
       expect(FormApp.getUi).toBeCalled();
       expect(FormApp.createAddonMenu).toBeCalled();
@@ -39,6 +43,9 @@ describe("OpenBadges", () => {
     });
 
     it("should add manual trigger for onFormSubmit", () => {
+      // Act
+      app.onOpen();
+
       // Assert
       expect(ScriptApp.newTrigger).toBeCalledWith("onFormSubmit");
       expect(ScriptApp.forForm).toBeCalled();
@@ -61,7 +68,7 @@ describe("OpenBadges", () => {
   });
 
   describe("onSaveConfiguration", () => {
-    beforeAll(() => {
+    beforeEach(() => {
       // Arrange
       global.PropertiesService = {
         getUserProperties: jest.fn().mockReturnThis(),
@@ -70,8 +77,6 @@ describe("OpenBadges", () => {
     });
 
     it("should access user properties", () => {
-
-
       // Act
       app.onSaveConfiguration({});
 
@@ -186,7 +191,6 @@ describe("OpenBadges", () => {
   });
 
   describe("onAuthorizationRequired", () => {
-
     describe("when mail app daily quota is 0", () => {
       it("should log error", () => {
         // Arrange
@@ -194,11 +198,89 @@ describe("OpenBadges", () => {
           log: jest.fn()
         };
 
+        global.MailApp = {
+          getRemainingDailyQuota: () => 0
+        };
+
         // Act
         app.onAuthorizationRequired();
 
         // Assert
         expect(Logger.log).toBeCalled();
+      });
+    });
+    describe("when lastAuthEmailDate is today", () => {
+      it("should update lastAuthEmailDate", () => {
+        // Arrange
+        global.MailApp = {
+          getRemainingDailyQuota: () => 1
+        };
+        const properties = {
+          getProperty: key => properties[key],
+          setProperty: (key, value) => (properties[key] = value),
+          lastAuthEmailDate: new Date().toDateString()
+        };
+        global.PropertiesService = {
+          getUserProperties: () => properties
+        };
+
+        // Act
+        const result = app.onAuthorizationRequired();
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe("when lastAuthEmailDate is not today", () => {
+      it("should send reauthorization email", () => {
+        // Arrange
+        global.MailApp = {
+          sendEmail: jest.fn(),
+          getRemainingDailyQuota: () => 1
+        };
+        const properties = {
+          getProperty: key => properties[key],
+          setProperty: (key, value) => (properties[key] = value),
+          lastAuthEmailDate: (d =>
+            new Date(d.setDate(d.getDate() - 1)).toDateString())(new Date())
+        };
+        global.PropertiesService = {
+          getUserProperties: () => properties
+        };
+
+        const authInfo = {
+          getAuthorizationUrl: jest.fn()
+        };
+
+        const html = {
+          getContent: jest.fn()
+        };
+
+        const template = {
+          evaluate: jest.fn().mockReturnValue(html)
+        };
+
+        global.HtmlService = {
+          createTemplate: jest.fn().mockReturnValue(template)
+        };
+
+        global.Session = {
+          getEffectiveUser: jest.fn().mockReturnThis(),
+          getEmail: jest.fn().mockReturnValue("email@email.com")
+        };
+
+        // Act
+        const result = app.onAuthorizationRequired(authInfo);
+
+        // Assert
+        expect(result).toBe(true);
+        expect(HtmlService.createTemplate).toBeCalledWith(
+          templates.authorizationEmail
+        );
+        expect(Session.getEmail).toBeCalled();
+        expect(MailApp.sendEmail.mock.calls[0].length).toBe(4);
+        expect(properties.lastAuthEmailDate).toBe(new Date().toDateString());
       });
     });
   });

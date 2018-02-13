@@ -127,24 +127,26 @@ const app = {
     const todayDate = new Date().toDateString();
 
     // Check whether the user has already received an email for reauth today.
-    if (lastAuthEmailDate != todayDate) {
-      // Get the template for the reauthorization email.
-      const template = HtmlService.createTemplate(templates.authorizationEmail);
-      template.url = authInfo.getAuthorizationUrl();
-      const html = template.evaluate();
-
-      // Send the email with the reauthorization link.
-      const recipient = Session.getEffectiveUser().getEmail();
-      const subject = "Authorization required";
-      const body = html.getContent();
-      const options = {
-        name: "OpenBadges",
-        htmlBody: body
-      };
-      MailApp.sendEmail(recipient, subject, body, options);
+    if (lastAuthEmailDate == todayDate) {
+      return false;
     }
 
+    // Get the template for the reauthorization email.
+    const template = HtmlService.createTemplate(templates.authorizationEmail);
+    template.url = authInfo.getAuthorizationUrl();
+    const html = template.evaluate();
+
+    // Send the email with the reauthorization link.
+    const recipient = Session.getEffectiveUser().getEmail();
+    const subject = "Authorization required";
+    const body = html.getContent();
+    const options = {
+      name: "OpenBadges",
+      htmlBody: body
+    };
+    MailApp.sendEmail(recipient, subject, body, options);
     properties.setProperty("lastAuthEmailDate", todayDate);
+    return true;
   },
 
   /**
