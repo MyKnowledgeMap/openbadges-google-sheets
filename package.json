@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Google App Script for OpenBadges.me",
   "scripts": {
-    "test": "jest --no-cache --collectCoverage",
+    "test": "jest --no-cache",
     "prebuild": "eslint ./src/**",
     "build": "./node_modules/.bin/babel src/app.js --out-file dist/app.js"
   },
@@ -23,20 +23,5 @@
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.8.0",
     "jest": "^22.2.1"
-  },
-  "jest": {
-    "moduleFileExtensions": ["js", "json"],
-    "moduleNameMapper": {
-      "^.+\\.html$": "<rootDir>/src/templates/html.mock.js"
-    },
-    "testRegex": "/src/.*\\.(spec).(ts|tsx|js)$",
-    "collectCoverageFrom": [
-      "src/*.{js,jsx,tsx,ts}",
-      "!**/*.spec.*",
-      "!**/*.mock.*",
-      "!**/node_modules/**",
-      "!**/vendor/**"
-    ],
-    "coverageReporters": ["json", "lcov"]
   }
 }

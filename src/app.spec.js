@@ -7,9 +7,6 @@ describe("OpenBadges", () => {
   let app;
 
   beforeEach(() => {
-    jest.resetAllMocks();
-    jest.resetModules();
-
     // Use require so reset modules works.
     app = require("./app").app; // eslint-disable-line
   });
