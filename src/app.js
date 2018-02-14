@@ -24,7 +24,7 @@ const app = {
     /*
     Bind the properties to the template. Would be ideal to use the spread operator
     and make this function immutable however the template object needs a deep copy
-    to get all required properties and functions.
+    to get all required properties and functions for evaluating the template.
     */
     /* eslint-disable no-param-reassign */
     template.apiKey = properties.apiKey || "";
@@ -96,13 +96,13 @@ const app = {
       apiUrl: config.openBadgesUrl,
       authToken: config.authToken,
       activtyId: config.activityId,
-      activityTime: config.activityTime,
-      userId: config.userId,
+      // activityTime: config.activityTime,
+      // userId: config.userId,
       firstName: config.firstName,
       lastName: config.lastName,
       text1: config.text1,
       text2: config.text2,
-      email: config.email,
+      // email: config.email,
       int1: config.int1,
       int2: config.int2,
       date1: config.date1

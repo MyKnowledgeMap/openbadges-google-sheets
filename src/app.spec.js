@@ -1,4 +1,4 @@
-/* global describe beforeEach jest expect beforeAll it FormApp ScriptApp
+/* global describe beforeEach jest expect it FormApp ScriptApp
 PropertiesService Logger HtmlService Session MailApp UrlFetchApp  */
 
 import { templates } from "./app";
@@ -187,7 +187,7 @@ describe("OpenBadges", () => {
               getPublishedUrl: jest.fn()
             },
             response: {
-              getTimestamp: jest.fn(),
+              getTimestamp: jest.fn().mockReturnValue(new Date()),
               getRespondentEmail: jest.fn()
             }
           };
