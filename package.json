@@ -5,7 +5,8 @@
   "scripts": {
     "test": "jest --no-cache",
     "prebuild": "eslint ./src/**",
-    "build": "./node_modules/.bin/babel src/app.js --out-file dist/app.js"
+    "build": "./node_modules/.bin/babel src/app.js --out-file dist/app.js",
+    "watch": "./node_modules/.bin/babel src/app.js --watch --out-file dist/app.js"
   },
   "author": "",
   "license": "ISC",

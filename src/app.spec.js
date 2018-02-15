@@ -9,6 +9,10 @@ describe("OpenBadges", () => {
   beforeEach(() => {
     // Use require so reset modules works.
     app = require("./app").app; // eslint-disable-line
+
+    global.Logger = {
+      log: jest.fn()
+    };
   });
 
   describe("onOpen", () => {
@@ -21,12 +25,6 @@ describe("OpenBadges", () => {
         addToUi: jest.fn().mockReturnThis(),
         getActiveForm: jest.fn().mockReturnThis()
       };
-      global.ScriptApp = {
-        newTrigger: jest.fn().mockReturnThis(),
-        forForm: jest.fn().mockReturnThis(),
-        onFormSubmit: jest.fn().mockReturnThis(),
-        create: jest.fn().mockReturnThis()
-      };
     });
 
     it("should provide addon menu", () => {
@@ -37,18 +35,6 @@ describe("OpenBadges", () => {
       expect(FormApp.getUi).toBeCalled();
       expect(FormApp.createAddonMenu).toBeCalled();
       expect(FormApp.addItem).toBeCalledWith("Settings", "showConfigurationModal");
-      expect(FormApp.getActiveForm).toBeCalled();
-    });
-
-    it("should add manual trigger for onFormSubmit", () => {
-      // Act
-      app.onOpen();
-
-      // Assert
-      expect(ScriptApp.newTrigger).toBeCalledWith("onFormSubmit");
-      expect(ScriptApp.forForm).toBeCalled();
-      expect(ScriptApp.onFormSubmit).toBeCalled();
-      expect(ScriptApp.create).toBeCalled();
     });
   });
 
@@ -69,8 +55,24 @@ describe("OpenBadges", () => {
     beforeEach(() => {
       // Arrange
       global.PropertiesService = {
-        getUserProperties: jest.fn().mockReturnThis(),
+        getDocumentProperties: jest.fn().mockReturnThis(),
         setProperties: jest.fn()
+      };
+
+      global.FormApp = {
+        getActiveForm: jest.fn().mockReturnThis()
+      };
+
+      const trigger = {
+        getHandlerFunction: () => "onFormSubmit"
+      };
+
+      global.ScriptApp = {
+        getProjectTriggers: jest.fn().mockReturnValue([trigger]),
+        newTrigger: jest.fn().mockReturnThis(),
+        forForm: jest.fn().mockReturnThis(),
+        onFormSubmit: jest.fn().mockReturnThis(),
+        create: jest.fn().mockReturnThis()
       };
     });
 
@@ -79,7 +81,7 @@ describe("OpenBadges", () => {
       app.onSaveConfiguration({});
 
       // Assert
-      expect(PropertiesService.getUserProperties).toBeCalled();
+      expect(PropertiesService.getDocumentProperties).toBeCalled();
     });
 
     it("should save properties", () => {
@@ -94,6 +96,20 @@ describe("OpenBadges", () => {
       expect(PropertiesService.setProperties).toBeCalledWith({
         apiKey: key
       });
+    });
+
+    it("should add manual trigger for onFormSubmit", () => {
+      const key = "1234567890";
+      const config = { apiKey: key };
+      global.ScriptApp.getProjectTriggers = jest.fn().mockReturnValue([]);
+      // Act
+      app.onSaveConfiguration(config);
+      // Assert
+      expect(ScriptApp.newTrigger).toBeCalledWith("onFormSubmit");
+      expect(ScriptApp.forForm).toBeCalled();
+      expect(FormApp.getActiveForm).toBeCalled();
+      expect(ScriptApp.onFormSubmit).toBeCalled();
+      expect(ScriptApp.create).toBeCalled();
     });
   });
 
@@ -148,7 +164,7 @@ describe("OpenBadges", () => {
           // Arrange
           const props = { apiUrl: "Value1", NotRequired: "Value2" };
           global.PropertiesService = {
-            getUserProperties: jest.fn().mockReturnThis(),
+            getDocumentProperties: jest.fn().mockReturnThis(),
             getProperties: jest.fn().mockReturnValue(props)
           };
 
@@ -167,11 +183,11 @@ describe("OpenBadges", () => {
           // Arrange
           const props = {
             apiUrl: "Value1",
-            authToken: "Value2",
+            apiToken: "Value2",
             apiKey: "Value3"
           };
           global.PropertiesService = {
-            getUserProperties: jest.fn().mockReturnThis(),
+            getDocumentProperties: jest.fn().mockReturnThis(),
             getProperties: jest.fn().mockReturnValue(props)
           };
 
@@ -245,7 +261,7 @@ describe("OpenBadges", () => {
           lastAuthEmailDate: new Date().toDateString()
         };
         global.PropertiesService = {
-          getUserProperties: () => properties
+          getDocumentProperties: () => properties
         };
 
         // Act
@@ -269,7 +285,7 @@ describe("OpenBadges", () => {
           lastAuthEmailDate: (d => new Date(d.setDate(d.getDate() - 1)).toDateString())(new Date())
         };
         global.PropertiesService = {
-          getUserProperties: () => properties
+          getDocumentProperties: () => properties
         };
 
         const authInfo = {
@@ -314,11 +330,12 @@ describe("OpenBadges", () => {
       template = {
         evaluate: jest.fn().mockReturnThis(),
         setHeight: jest.fn().mockReturnThis(),
-        setWidth: jest.fn().mockReturnThis()
+        setWidth: jest.fn().mockReturnThis(),
+        setTitle: jest.fn().mockReturnThis()
       };
 
       global.PropertiesService = {
-        getUserProperties: jest.fn().mockReturnThis(),
+        getDocumentProperties: jest.fn().mockReturnThis(),
         getProperties: jest.fn().mockReturnValue({})
       };
 
@@ -345,6 +362,7 @@ describe("OpenBadges", () => {
       expect(template.evaluate).toBeCalled();
       expect(template.setHeight).toBeCalled();
       expect(template.setWidth).toBeCalled();
+      expect(template.setTitle).toBeCalled();
     });
 
     it("should show configuration modal", () => {
@@ -388,7 +406,7 @@ describe("OpenBadges", () => {
       it("should set template bindings as empty strings", () => {
         // Arrange
         global.PropertiesService = {
-          getUserProperties: jest.fn().mockReturnThis(),
+          getDocumentProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue({})
         };
 
@@ -397,16 +415,10 @@ describe("OpenBadges", () => {
 
         // Assert
         expect(boundTemplate.apiKey).toBe("");
-        expect(boundTemplate.authToken).toBe("");
-        expect(boundTemplate.openBadgesUrl).toBe("");
+        expect(boundTemplate.apiToken).toBe("");
+        expect(boundTemplate.apiUrl).toBe("");
         expect(boundTemplate.activityId).toBe("");
-        expect(boundTemplate.activityTime).toBe("");
-        expect(boundTemplate.userId).toBe("");
         expect(boundTemplate.text1).toBe("");
-        expect(boundTemplate.text2).toBe("");
-        expect(boundTemplate.email).toBe("");
-        expect(boundTemplate.firstName).toBe("");
-        expect(boundTemplate.lastName).toBe("");
         expect(boundTemplate.int1).toBe("");
         expect(boundTemplate.int2).toBe("");
         expect(boundTemplate.date1).toBe("");
@@ -418,7 +430,7 @@ describe("OpenBadges", () => {
         // Arrange
         const props = {
           apiKey: "Test",
-          authToken: "Test",
+          apiToken: "Test",
           apiUrl: "Test",
           activityId: "Test",
           activityTime: "Test",
@@ -433,7 +445,7 @@ describe("OpenBadges", () => {
           email: "Test"
         };
         global.PropertiesService = {
-          getUserProperties: jest.fn().mockReturnThis(),
+          getDocumentProperties: jest.fn().mockReturnThis(),
           getProperties: jest.fn().mockReturnValue(props)
         };
 
@@ -442,16 +454,10 @@ describe("OpenBadges", () => {
 
         // Assert
         expect(boundTemplate.apiKey).toBe("Test");
-        expect(boundTemplate.authToken).toBe("Test");
-        expect(boundTemplate.openBadgesUrl).toBe("Test");
+        expect(boundTemplate.apiToken).toBe("Test");
+        expect(boundTemplate.apiUrl).toBe("Test");
         expect(boundTemplate.activityId).toBe("Test");
-        expect(boundTemplate.activityTime).toBe("Test");
-        expect(boundTemplate.userId).toBe("Test");
         expect(boundTemplate.text1).toBe("Test");
-        expect(boundTemplate.text2).toBe("Test");
-        expect(boundTemplate.email).toBe("Test");
-        expect(boundTemplate.firstName).toBe("Test");
-        expect(boundTemplate.lastName).toBe("Test");
         expect(boundTemplate.int1).toBe("Test");
         expect(boundTemplate.int2).toBe("Test");
         expect(boundTemplate.date1).toBe("Test");

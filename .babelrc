@@ -6,14 +6,13 @@
   ],
   "env": {
     "test": {
-      "presets": [["env", { "modules": "commonjs" }]]
+      "presets": [["env", { "modules": "commonjs" }]],
+      "sourceMaps": "both"
     },
     "development": {
       "presets": [["env", { "modules": false }]],
       "plugins": ["transform-remove-export"],
       "ignore": ["**/*.spec.js", "**/*.mock.js"]
     }
-  },
-  "sourceMaps": "both",
-  "comments": false
+  }
 }

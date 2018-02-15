@@ -19,7 +19,7 @@ const app = {
    */
   bindPropertiesToTemplate: template => {
     // Get the user properties.
-    const properties = PropertiesService.getUserProperties().getProperties();
+    const properties = PropertiesService.getDocumentProperties().getProperties();
 
     /*
     Bind the properties to the template. Would be ideal to use the spread operator
@@ -28,16 +28,16 @@ const app = {
     */
     /* eslint-disable no-param-reassign */
     template.apiKey = properties.apiKey || "";
-    template.authToken = properties.authToken || "";
-    template.openBadgesUrl = properties.apiUrl || "";
+    template.apiToken = properties.apiToken || "";
+    template.apiUrl = properties.apiUrl || "";
     template.activityId = properties.activityId || "";
-    template.activityTime = properties.activityTime || "";
-    template.firstName = properties.firstName || "";
-    template.lastName = properties.lastName || "";
-    template.userId = properties.userId || "";
+    // template.activityTime = properties.activityTime || "";
+    // template.firstName = properties.firstName || "";
+    // template.lastName = properties.lastName || "";
+    // template.userId = properties.userId || "";
     template.text1 = properties.text1 || "";
-    template.text2 = properties.text2 || "";
-    template.email = properties.email || "";
+    // template.text2 = properties.text2 || "";
+    // template.email = properties.email || "";
     template.int1 = properties.int1 || "";
     template.int2 = properties.int2 || "";
     template.date1 = properties.date1 || "";
@@ -67,12 +67,6 @@ const app = {
       .createAddonMenu()
       .addItem("Settings", "showConfigurationModal")
       .addToUi();
-
-    // Add the onFormSubmit trigger manually.
-    ScriptApp.newTrigger("onFormSubmit")
-      .forForm(FormApp.getActiveForm())
-      .onFormSubmit()
-      .create();
   },
 
   /**
@@ -93,29 +87,39 @@ const app = {
     // Create the property model from the provided config.
     const properties = {
       apiKey: config.apiKey,
-      apiUrl: config.openBadgesUrl,
-      authToken: config.authToken,
-      activtyId: config.activityId,
-      // activityTime: config.activityTime,
-      // userId: config.userId,
-      firstName: config.firstName,
-      lastName: config.lastName,
+      apiUrl: config.apiUrl,
+      apiToken: config.apiToken,
+      activityId: config.activityId,
       text1: config.text1,
-      text2: config.text2,
-      // email: config.email,
       int1: config.int1,
       int2: config.int2,
       date1: config.date1
     };
 
     // Save the properties so they can be used later.
-    PropertiesService.getUserProperties().setProperties(properties);
+    PropertiesService.getDocumentProperties().setProperties(properties);
+
+    // Trigger for the onFormSubmit event.
+    const triggers = ScriptApp.getProjectTriggers();
+    Logger.log(`Amount of triggers ${triggers.length}`);
+
+    // Check if there is an existing onFormSubmit trigger.
+    const ofsTriggerExists = triggers.some(trigger => trigger.getHandlerFunction() === "onFormSubmit");
+
+    // Create the trigger if it does not exist.
+    if (!ofsTriggerExists) {
+      ScriptApp.newTrigger("onFormSubmit")
+        .forForm(FormApp.getActiveForm())
+        .onFormSubmit()
+        .create();
+      Logger.log("Trigger added");
+    }
   },
 
   /**
    *  The onFormSubmit event function which runs when a form is submitted.
    */
-  onFormSubmit: $event => {
+  onFormSubmit: e => {
     // Check whether authorization is required for this trigger event.
     const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
     if (authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED) {
@@ -123,21 +127,21 @@ const app = {
     }
 
     // Get the script properties which should have been configured.
-    const properties = PropertiesService.getUserProperties().getProperties();
+    const properties = PropertiesService.getDocumentProperties().getProperties();
 
     // Stop processing if the properties needed to make a request are not set.
-    const requiredProperties = ["apiUrl", "authToken", "apiKey"];
+    const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
     if (!app.hasRequiredProperties(properties, requiredProperties)) {
       Logger.log("Request cancelled as required properties are missing.");
       return false;
     }
 
     // Get the original form and form response from the event.
-    const { source: form, response } = $event;
+    const { source: form, response } = e;
 
     // Build the request header.
     const headers = {
-      Authorization: `Bearer ${properties.authToken}`,
+      Authorization: `Bearer ${properties.apiToken}`,
       ApiKey: properties.apiKey
     };
 
@@ -145,12 +149,10 @@ const app = {
     const payload = {
       activityId: properties.activityId,
       activityTime: response.getTimestamp().toUTCString(),
-      // userId: properties.userId,
       text1: properties.text1,
       text2: form.shortenFormUrl(form.getPublishedUrl()),
-      // firstName: properties.firstName,
-      // lastName: properties.lastName,
       email: response.getRespondentEmail(),
+      userId: response.getRespondentEmail(),
       int1: properties.int1,
       int2: properties.int2,
       date1: properties.date1
@@ -163,6 +165,8 @@ const app = {
       headers,
       payload: JSON.stringify(payload)
     };
+
+    Logger.log(JSON.stringify(options));
 
     // Make the request and get the response.
     const apiResult = UrlFetchApp.fetch(properties.apiUrl, options);
@@ -179,7 +183,7 @@ const app = {
       return Logger.log("Daily email quota has been reached.");
     }
 
-    const properties = PropertiesService.getUserProperties();
+    const properties = PropertiesService.getDocumentProperties();
     const lastAuthEmailDate = properties.getProperty("lastAuthEmailDate");
     const todayDate = new Date().toDateString();
 
@@ -221,10 +225,11 @@ const app = {
     // Evaluate the template to HTML so bindings are rendered.
     const html = boundTemplate
       .evaluate()
+      .setTitle("OpenBadges")
       .setHeight(650)
       .setWidth(450);
 
-    // Create the modalDialog from the HTML.
+    // Create the sidebar from the HTML.
     FormApp.getUi().showSidebar(html);
   }
 };
