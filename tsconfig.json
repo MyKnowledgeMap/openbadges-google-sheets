@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outFile": "./dist/app.gs",
+      "allowJs": false,
+      "target": "es5",
+      "module": "amd"
+  },
+  "include": [
+      "./src/**/*"
+  ]
+}

@@ -3,26 +3,19 @@
   "version": "1.0.0",
   "description": "Google App Script for OpenBadges.me",
   "scripts": {
-    "test": "jest --no-cache",
-    "prebuild": "eslint ./src/**",
-    "build": "./node_modules/.bin/babel src/app.js --out-file dist/app.js",
-    "watch": "./node_modules/.bin/babel src/app.js --watch --out-file dist/app.js"
+    "precommit": "pretty-quick --staged",
+    "build": "tsc && node post-build.js",
+    "watch": "tes --watch"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-jest": "^22.2.2",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-html-import-to-string": "0.0.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-remove-export": "^1.0.0",
-    "babel-preset-env": "^1.6.1",
-    "eslint": "^4.18.1",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "jest": "^22.2.1"
+    "@types/google-apps-script": "0.0.21",
+    "fs-extra": "^5.0.0",
+    "husky": "^0.14.3",
+    "prettier": "1.11.1",
+    "pretty-quick": "^1.4.1",
+    "typescript": "^2.7.2"
   }
 }
