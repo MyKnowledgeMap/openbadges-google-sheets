@@ -3,7 +3,7 @@
     "outFile": "./dist/app.gs",
       "allowJs": false,
       "target": "es5",
-      "module": "amd"
+      "strict": true
   },
   "include": [
       "./src/**/*"

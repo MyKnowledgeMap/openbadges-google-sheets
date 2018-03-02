@@ -1,59 +1,7 @@
 /**
- * Interface for the user's properties.
- * @interface IUserProperties
- */
-interface IUserProperties {
-  apiKey: string;
-  apiUrl: string;
-  apiToken: string;
-  activityId: string;
-  text1: string;
-  int1: string;
-  int2: string;
-  date1: string;
-}
-
-/**
- * Interface for Auth Template.
- * @interface IAuthTemplate
- * @extends {GoogleAppsScript.HTML.HtmlTemplate}
- */
-interface IAuthTemplate extends GoogleAppsScript.HTML.HtmlTemplate {
-  authUrl: string;
-}
-
-/**
- * Interface for Settings Template.
- * @interface ISettingsTemplate
- * @extends {GoogleAppsScript.HTML.HtmlTemplate}
- */
-interface ISettingsTemplate extends GoogleAppsScript.HTML.HtmlTemplate {
-  apiKey: string;
-  apiUrl: string;
-  apiToken: string;
-  activityId: string;
-  text1: string;
-  int1: string;
-  int2: string;
-  date1: string;
-}
-
-/**
- * Interface for FormSubmitEvent since it doesn't appear to be included in @types/google-app-script.
- * https://developers.google.com/apps-script/guides/triggers/events
- * @interface IFormSubmitEvent
- */
-interface IFormSubmitEvent {
-  source: GoogleAppsScript.Forms.Form;
-  response: GoogleAppsScript.Forms.FormResponse;
-  authMode: GoogleAppsScript.Script.AuthMode;
-  triggerUid: number;
-}
-
-/**
  * The onOpen event function which runs when the document/form is opened.
  */
-const onOpen = (): void => {
+function onOpen(): void {
   // Check whether the user has full auth, otherwise make them authorize.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   if (
@@ -69,21 +17,21 @@ const onOpen = (): void => {
       .addItem("Settings", "showSettingsSidebar")
       .addToUi();
   }
-};
+}
 
 /**
  * The onInstall event function which runs when the app script is installed.
  */
-const onInstall = (): void => {
+function onInstall(): void {
   onOpen();
-};
+}
 
 /**
  * The onSaveconfig event function which runs when the user has
  * saved their OpenBadges config within the google app.
- * @param {any} config
+ * @param {IUserProperties} props
  */
-const onSaveConfiguration = (props: IUserProperties): void => {
+function onSaveConfiguration(props: IUserProperties): void {
   // TODO: Validate the provided config, throw errors if validation fails.
 
   // Save the properties so they can be used later.
@@ -91,9 +39,8 @@ const onSaveConfiguration = (props: IUserProperties): void => {
 
   // See if we have to create a trigger.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-  if (
-    authInfo.getAuthorizationStatus() !== ScriptApp.AuthorizationStatus.REQUIRED
-  ) {
+  const authStatus = authInfo.getAuthorizationStatus();
+  if (authStatus !== ScriptApp.AuthorizationStatus.REQUIRED) {
     // Trigger for the onFormSubmit event.
     const triggers = ScriptApp.getProjectTriggers();
     Logger.log(`Amount of triggers ${triggers.length}`);
@@ -112,15 +59,17 @@ const onSaveConfiguration = (props: IUserProperties): void => {
       Logger.log("Trigger added");
     }
   }
-};
+}
 
 /**
  * Check whether the user has been recently sent a reauthorization email
  * and send a new email if required containing the reauthorization link.
+ * @param {GoogleAppsScript.Script.AuthorizationInfo} authInfo
+ * @returns {void}
  */
-const onAuthorizationRequired = (
+function onAuthorizationRequired(
   authInfo: GoogleAppsScript.Script.AuthorizationInfo
-): void => {
+): void {
   if (MailApp.getRemainingDailyQuota() === 0) {
     Logger.log("Daily email quota has been reached.");
     return;
@@ -152,18 +101,20 @@ const onAuthorizationRequired = (
 
   // Update the lastAuthEmailDate property.
   properties.setProperty("lastAuthEmailDate", todayDate);
-};
+}
 
 /**
- *  The onFormSubmit event function which runs when a form is submitted.
+ * The onFormSubmit event function which runs when a form is submitted.
+ * @param {IFormSubmitEvent} e
+ * @returns {void}
  */
-const onFormSubmit = (e: IFormSubmitEvent): void => {
+function onFormSubmit(e: IFormSubmitEvent): void {
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-  if (
-    authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED
-  ) {
-    return onAuthorizationRequired(authInfo);
+  const authStatus = authInfo.getAuthorizationStatus();
+  if (authStatus === ScriptApp.AuthorizationStatus.REQUIRED) {
+    onAuthorizationRequired(authInfo);
+    return;
   }
 
   // Get the script properties which should have been configured.
@@ -179,30 +130,33 @@ const onFormSubmit = (e: IFormSubmitEvent): void => {
     return;
   }
 
+  setDynamicProperties(e.response, props);
+  sendToApi(e.source, e.response, props);
+}
+
+/**
+ * Send the form response to the API
+ * @param {GoogleAppsScript.Forms.Form} form
+ * @param {GoogleAppsScript.Forms.FormResponse} response
+ * @param {IUserProperties} props
+ */
+function sendToApi(
+  form: GoogleAppsScript.Forms.Form,
+  response: GoogleAppsScript.Forms.FormResponse,
+  props: IUserProperties
+): void {
   // Build the request header.
   const headers = {
     Authorization: `Bearer ${props.apiToken}`,
     ApiKey: props.apiKey
   };
 
-  // Get the original form and form response from the event.
-  const { source: form, response } = e;
-
-  // Regex to check for $[dynamic properties] .
-  const rgx = new RegExp(/\$\[.+\]/g);
-  const hasDynamicProperties = Object.keys(props).some((key) =>
-    rgx.test(props[key])
-  );
-  if (hasDynamicProperties) {
-    const itemResponses = response.getItemResponses();
-  }
-
   // Build the request payload.
   const payload = {
     activityId: props.activityId,
     activityTime: response.getTimestamp().toUTCString(),
     text1: props.text1,
-    text2: form.shortenFormUrl(form.getPublishedUrl()),
+    text2: form.getId(),
     email: response.getRespondentEmail(),
     userId: response.getRespondentEmail(),
     int1: props.int1,
@@ -218,18 +172,53 @@ const onFormSubmit = (e: IFormSubmitEvent): void => {
     payload: JSON.stringify(payload)
   };
 
-  Logger.log(JSON.stringify(options));
-
   // Make the request and get the response.
-  const apiResult = UrlFetchApp.fetch(props.apiUrl, options);
+  const result = UrlFetchApp.fetch(props.apiUrl, options);
 
-  // TODO: Error handling
-};
+  // TODO: Error handling.
+}
+
+/**
+ * Check for any dynamic properties for the user and fetch them from the response.
+ * @param {GoogleAppsScript.Forms.FormResponse} formResponse
+ * @param {IUserProperties} props
+ */
+function setDynamicProperties(
+  formResponse: GoogleAppsScript.Forms.FormResponse,
+  props: IUserProperties
+) {
+  // Regex to check for $[dynamic properties] .
+  const rgx = new RegExp(/\$\[.+\]/);
+  const hasDynamicProps = Object.keys(props).some((key) =>
+    rgx.test(props[key])
+  );
+
+  if (hasDynamicProps) {
+    // Load all responses so we can find matching ones.
+    const itemResponses = formResponse.getItemResponses();
+    const simpleResponses: ISimpleItemResponse[] = itemResponses.map((r) => ({
+      title: r.getItem().getTitle(),
+      response: r.getResponse()
+    }));
+
+    Object.keys(props).forEach((key) => {
+      const prop = props[key].toLowerCase();
+      if (rgx.test(prop)) {
+        const responseToUse = simpleResponses.filter(
+          (r) => prop.indexOf(r.title.toLowerCase()) !== -1
+        )[0];
+        if (responseToUse !== undefined) {
+          props[key] = responseToUse.response;
+        }
+      }
+    });
+  }
+}
 
 /**
  * The showConfigurationModal user interface.
  */
-const showSettingsSidebar = (): void => {
+function showSettingsSidebar(): void {
   // Create the app template from the HTML template.
   const template = HtmlService.createTemplateFromFile(
     "settings.sidebar"
@@ -251,12 +240,12 @@ const showSettingsSidebar = (): void => {
 
   // Create the sidebar from the HTML.
   FormApp.getUi().showSidebar(html);
-};
+}
 
 /**
  * The showAuthModal user interface.
  */
-const showAuthModal = (): void => {
+function showAuthModal(): void {
   // Create the template.
   const template = HtmlService.createTemplateFromFile(
     "auth.modal"
@@ -271,4 +260,4 @@ const showAuthModal = (): void => {
 
   // Create the modal from the HTML.
   FormApp.getUi().showModalDialog(html, "Authorization required");
-};
+}
