@@ -256,7 +256,10 @@ function showAuthModal(): void {
   template.authUrl = authInfo.getAuthorizationUrl();
 
   // Evaluate the template to HTML so bindings are rendered.
-  const html = template.evaluate();
+  const html = template
+    .evaluate()
+    .setHeight(200)
+    .setWidth(300);
 
   // Create the modal from the HTML.
   FormApp.getUi().showModalDialog(html, "Authorization required");
