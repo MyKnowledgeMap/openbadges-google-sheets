@@ -169,13 +169,19 @@ function sendToApi(
     method: "post",
     contentType: "application/json",
     headers,
-    payload: JSON.stringify(payload)
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
   };
 
   // Make the request and get the response.
   const result = UrlFetchApp.fetch(props.apiUrl, options);
+  const responseCode = result.getResponseCode();
+  if (responseCode === 200) {
+    return;
+  }
 
-  // TODO: Error handling.
+  // Response was not successful.
+  // TODO: Error handling
 }
 
 /**
@@ -187,8 +193,8 @@ function setDynamicProperties(
   formResponse: GoogleAppsScript.Forms.FormResponse,
   props: IUserProperties
 ) {
-  // Regex to check for $[dynamic properties] .
-  const rgx = new RegExp(/\$\[.+\]/);
+  // Regex to check for {{dynamic properties}}.
+  const rgx = new RegExp(/{{.+}}/);
   const hasDynamicProps = Object.keys(props).some((key) =>
     rgx.test(props[key])
   );
