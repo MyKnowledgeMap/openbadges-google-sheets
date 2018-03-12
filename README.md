@@ -6,7 +6,7 @@ Google App Script for OpenBadges.me containing Google Forms and Google Sheets ad
 
 1. Clone this repository.
 2. Run `npm install` to install the dependencies for the add-ons.
-3. Create a `.env` file at the root level for this package with the foowing keys:
+3. Create a `.env` file at the root level for this package with the following keys:
 
     | Key | Description | Type |
     |--|--|--|
