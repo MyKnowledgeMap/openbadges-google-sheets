@@ -46,7 +46,7 @@ typings/
 # Optional eslint cache
 .eslintcache
 
-# Ide stuff
+# IDE stuff
 .vscode
 
 # Optional REPL history
