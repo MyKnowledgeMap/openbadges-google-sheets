@@ -206,7 +206,7 @@ function sendEmail(
 ): void {
   // Create the header with the api key.
   const headers = {
-    Authorization: "Bearer " + process.env.SENDGRID_KEY!
+    Authorization: `Bearer ${process.env.SENDGRID_KEY!}`
   };
 
   // Create the request payload.
