@@ -1,8 +1,5 @@
 // Register the .env variables since we need to inject them.
-const result = require("dotenv").config();
-if (result.error) {
-  throw result.error;
-}
+require("dotenv-safe").config();
 
 // The plugins to transform code.
 const plugins = [
@@ -11,7 +8,7 @@ const plugins = [
     require("babel-plugin-transform-html-import-to-string")
   ],
   [
-    // Transforms process.env.xxxxxxx to their actual value process.env value.
+    // Transforms process.env.xxxxxxx to their actual value on build.
     require("babel-plugin-transform-inline-environment-variables")
   ]
 ];
@@ -23,18 +20,18 @@ const presets = [
     require("@babel/preset-typescript")
   ],
   [
-    // Automatically determines the Babel plugins you need based on your supported environments.
+    // Automatically determines the Babel plugins you need based on your supported environments. Default to ES5.
     require("@babel/preset-env")
   ]
 ];
 
 // The entry points to the addons.
-const entries = ["./src/forms.ts", "./src/sheets.ts"];
+const only = ["./src/forms.ts", "./src/sheets.ts"];
 
 module.exports = {
   presets,
   plugins,
-  only: entries,
+  only,
   comments: false,
   sourceType: "module"
 };
