@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "outFile": "./dist/app.gs",
-      "allowJs": false,
-      "target": "es5",
-      "strict": true
+    "pretty": true,
+    "target": "es3",
+    "allowJs": false,
+    "noEmit": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "commonjs"
   },
-  "include": [
-      "./src/**/*"
+  "exclude": [
+    "node_modules"
   ]
 }

@@ -1,22 +1,22 @@
+import authEmailTemplate from "./templates/auth.email.html";
+import authModalTemplate from "./templates/auth.modal.html";
+import settingsSidebarTemplate from "./templates/forms-settings.sidebar.html";
+
 /**
  * The onOpen event function which runs when the document/form is opened.
  */
 function onOpen(): void {
+  const menu = FormApp.getUi().createAddonMenu();
   // Check whether the user has full auth, otherwise make them authorize.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   if (
     authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED
   ) {
-    FormApp.getUi()
-      .createAddonMenu()
-      .addItem("Authorize", "showAuthModal")
-      .addToUi();
+    menu.addItem("Authorize", "showAuthModal");
   } else {
-    FormApp.getUi()
-      .createAddonMenu()
-      .addItem("Settings", "showSettingsSidebar")
-      .addToUi();
+    menu.addItem("Settings", "showSettingsSidebar");
   }
+  menu.addToUi();
 }
 
 /**
@@ -29,9 +29,9 @@ function onInstall(): void {
 /**
  * The onSaveconfig event function which runs when the user has
  * saved their OpenBadges config within the google app.
- * @param {IUserProperties} props
+ * @param {FormsUserProperties} props
  */
-function onSaveConfiguration(props: IUserProperties): void {
+function onSaveConfiguration(props: FormsUserProperties): void {
   // TODO: Validate the provided config, throw errors if validation fails.
 
   // Save the properties so they can be used later.
@@ -70,11 +70,6 @@ function onSaveConfiguration(props: IUserProperties): void {
 function onAuthorizationRequired(
   authInfo: GoogleAppsScript.Script.AuthorizationInfo
 ): void {
-  if (MailApp.getRemainingDailyQuota() === 0) {
-    Logger.log("Daily email quota has been reached.");
-    return;
-  }
-
   const properties = PropertiesService.getDocumentProperties();
   const lastAuthEmailDate = properties.getProperty("lastAuthEmailDate");
   const todayDate = new Date().toDateString();
@@ -85,19 +80,17 @@ function onAuthorizationRequired(
   }
 
   // Get the template for the reauthorization email.
-  const template = HtmlService.createTemplate("auth.email") as IAuthTemplate;
+  const template = HtmlService.createTemplate(
+    authEmailTemplate
+  ) as AuthTemplate;
   template.authUrl = authInfo.getAuthorizationUrl();
   const html = template.evaluate();
 
   // Send the email with the reauthorization link.
   const recipient = Session.getEffectiveUser().getEmail();
-  const subject = "Authorization required";
+  const subject = "OpenBadges - Authorization is required.";
   const body = html.getContent();
-  const options = {
-    name: "OpenBadges",
-    htmlBody: body
-  };
-  MailApp.sendEmail(recipient, subject, body, options);
+  sendEmail(recipient, subject, body, "text/html");
 
   // Update the lastAuthEmailDate property.
   properties.setProperty("lastAuthEmailDate", todayDate);
@@ -108,7 +101,7 @@ function onAuthorizationRequired(
  * @param {IFormSubmitEvent} e
  * @returns {void}
  */
-function onFormSubmit(e: IFormSubmitEvent): void {
+function onFormSubmit(e: FormSubmitEvent): void {
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
@@ -118,7 +111,7 @@ function onFormSubmit(e: IFormSubmitEvent): void {
   }
 
   // Get the script properties which should have been configured.
-  const props = PropertiesService.getDocumentProperties().getProperties() as IUserProperties;
+  const props = PropertiesService.getDocumentProperties().getProperties() as FormsUserProperties;
 
   // Stop processing if the properties needed to make a request are not set.
   const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
@@ -138,12 +131,12 @@ function onFormSubmit(e: IFormSubmitEvent): void {
  * Send the form response to the API
  * @param {GoogleAppsScript.Forms.Form} form
  * @param {GoogleAppsScript.Forms.FormResponse} response
- * @param {IUserProperties} props
+ * @param {FormsUserProperties} props
  */
 function sendToApi(
   form: GoogleAppsScript.Forms.Form,
   response: GoogleAppsScript.Forms.FormResponse,
-  props: IUserProperties
+  props: FormsUserProperties
 ): void {
   // Build the request header.
   const headers = {
@@ -173,51 +166,116 @@ function sendToApi(
     muteHttpExceptions: true
   };
 
-  // Make the request and get the response.
-  const result = UrlFetchApp.fetch(props.apiUrl, options);
-  const responseCode = result.getResponseCode();
-  if (responseCode === 200) {
-    return;
-  }
+  for (let retry = 0; retry < 3; retry++) {
+    // Make the request and get the response.
+    const result = UrlFetchApp.fetch(props.apiUrl, options);
 
-  // Response was not successful.
-  // TODO: Error handling
+    // If the response code is 200 Ok then we can stop processing as it was a successful request.
+    const responseCode = result.getResponseCode();
+    if (responseCode === 200) {
+      return;
+    }
+
+    if (retry === 2) {
+      Logger.log("Request %s failed. Sending email to Form owner...", retry);
+      const recipient = Session.getEffectiveUser().getEmail();
+      const subject =
+        "OpenBadges - An error occurred after form was submitted.";
+      const body = result.getContentText();
+      sendEmail(recipient, subject, body, "text/plain");
+    } else {
+      Logger.log("Request %s failed. Retrying...", retry);
+      Utilities.sleep(500);
+    }
+  }
+}
+
+/**
+ * Send an email using the SendGrid API.
+ * https://sendgrid.com/docs/API_Reference/api_v3.html
+ * @param {string} to the email address the email should be sent to.
+ * @param {string} subject the subject of the email.
+ * @param {string} body the body of the email.
+ * @param {string} contentType the content type of the email body.
+ */
+function sendEmail(
+  to: string,
+  subject: string,
+  body: string,
+  contentType: string
+): void {
+  // Create the header with the api key.
+  const headers = {
+    Authorization: "Bearer " + process.env.SENDGRID_KEY!
+  };
+
+  // Create the request payload.
+  const payload = {
+    personalizations: [
+      {
+        to: [
+          {
+            email: to
+          }
+        ],
+        subject
+      }
+    ],
+    from: {
+      email: process.env.ERROR_EMAIL!
+    },
+    content: [
+      {
+        type: contentType,
+        value: body
+      }
+    ]
+  };
+
+  // Create the URL request options.
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    headers,
+    contentType: "application/json",
+    payload: JSON.stringify(payload)
+  };
+
+  // Make the request.
+  const response = UrlFetchApp.fetch(process.env.SENDGRID_URL!, options);
 }
 
 /**
  * Check for any dynamic properties for the user and fetch them from the response.
  * @param {GoogleAppsScript.Forms.FormResponse} formResponse
- * @param {IUserProperties} props
+ * @param {FormsUserProperties} props
  */
 function setDynamicProperties(
   formResponse: GoogleAppsScript.Forms.FormResponse,
-  props: IUserProperties
+  props: FormsUserProperties
 ) {
   // Regex to check for {{dynamic properties}}.
   const rgx = new RegExp(/{{.+}}/);
-  const hasDynamicProps = Object.keys(props).some((key) =>
-    rgx.test(props[key])
-  );
+  const hasDynamicProps = Object.keys(props).some((x) => rgx.test(props[x]));
 
   if (hasDynamicProps) {
     // Load all responses so we can find matching ones.
     const itemResponses = formResponse.getItemResponses();
-    const simpleResponses: ISimpleItemResponse[] = itemResponses.map((r) => ({
+    const simpleResponses: SimpleItemResponse[] = itemResponses.map((r) => ({
       title: r.getItem().getTitle(),
       response: r.getResponse()
     }));
 
-    Object.keys(props).forEach((key) => {
-      const prop = props[key].toLowerCase();
-      if (rgx.test(prop)) {
+    Object.keys(props)
+      .map((x) => props[x].toLowerCase())
+      .filter((x) => rgx.test(x))
+      .forEach((x) => {
         const responseToUse = simpleResponses.filter(
-          (r) => prop.indexOf(r.title.toLowerCase()) !== -1
+          (r) => x.indexOf(r.title.toLowerCase()) !== -1
         )[0];
         if (responseToUse !== undefined) {
-          props[key] = responseToUse.response;
+          x = responseToUse.response;
         }
-      }
-    });
+      });
   }
 }
 
@@ -226,12 +284,12 @@ function setDynamicProperties(
  */
 function showSettingsSidebar(): void {
   // Create the app template from the HTML template.
-  const template = HtmlService.createTemplateFromFile(
-    "settings.sidebar"
-  ) as ISettingsTemplate;
+  const template = HtmlService.createTemplate(
+    settingsSidebarTemplate
+  ) as FormsSettingsTemplate;
 
   // Add the bound properties to the template.
-  const props = PropertiesService.getDocumentProperties().getProperties() as IUserProperties;
+  const props = PropertiesService.getDocumentProperties().getProperties() as FormsUserProperties;
   template.apiKey = props.apiKey || "";
   template.apiToken = props.apiToken || "";
   template.apiUrl = props.apiUrl || "";
@@ -253,9 +311,9 @@ function showSettingsSidebar(): void {
  */
 function showAuthModal(): void {
   // Create the template.
-  const template = HtmlService.createTemplateFromFile(
-    "auth.modal"
-  ) as IAuthTemplate;
+  const template = HtmlService.createTemplate(
+    authModalTemplate
+  ) as AuthTemplate;
 
   // Add the auth URL to the template.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
