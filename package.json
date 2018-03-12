@@ -14,10 +14,7 @@
       "prettier --parser typescript --write",
       "git add"
     ],
-    "*.js": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{js,json,css,md}": ["prettier --write", "git add"]
   },
   "dependencies": {
     "husky": "^0.14.3",
