@@ -1,14 +1,32 @@
-// Register the .env variables since we need to injec them.
-require("dotenv").config();
+// Register the .env variables since we need to inject them.
+const result = require("dotenv").config();
+if (result.error) {
+  throw result.error;
+}
 
-// The additional plugins to use to transform the code.
+// The plugins to transform code.
 const plugins = [
-  "transform-html-import-to-string",
-  "transform-inline-environment-variables"
+  [
+    // Transforms import html modules to an inline string.
+    require("babel-plugin-transform-html-import-to-string")
+  ],
+  [
+    // Transforms process.env.xxxxxxx to their actual value process.env value.
+    require("babel-plugin-transform-inline-environment-variables")
+  ]
 ];
 
-// The presets contain a set of plugins.
-const presets = ["@babel/typescript", "@babel/preset-env"];
+// The presets contain sets of plugins.
+const presets = [
+  [
+    // Transform typescript and add object rest & spread syntax.
+    require("@babel/preset-typescript")
+  ],
+  [
+    // Automatically determines the Babel plugins you need based on your supported environments.
+    require("@babel/preset-env")
+  ]
+];
 
 // The entry points to the addons.
 const entries = ["./src/forms.ts", "./src/sheets.ts"];
