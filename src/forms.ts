@@ -259,21 +259,22 @@ function setDynamicProperties(
 
   if (hasDynamicProps) {
     // Load all responses so we can find matching ones.
-    const itemResponses = formResponse.getItemResponses();
-    const simpleResponses: ISimpleItemResponse[] = itemResponses.map((r) => ({
-      title: r.getItem().getTitle(),
-      response: r.getResponse()
-    }));
+    const responses: ISimpleItemResponse[] = formResponse
+      .getItemResponses()
+      .map((r) => ({
+        title: r.getItem().getTitle(),
+        response: r.getResponse()
+      }));
 
     Object.keys(props)
-      .map((x) => props[x].toLowerCase())
-      .filter((x) => rgx.test(x))
-      .forEach((x) => {
-        const responseToUse = simpleResponses.filter(
-          (r) => x.indexOf(r.title.toLowerCase()) !== -1
+      .map((key) => props[key].toLowerCase())
+      .filter((prop) => rgx.test(prop))
+      .forEach((prop) => {
+        const responseToUse = responses.filter(
+          (resp) => prop.indexOf(resp.title.toLowerCase()) !== -1
         )[0];
         if (responseToUse !== undefined) {
-          x = responseToUse.response;
+          prop = responseToUse.response;
         }
       });
   }
