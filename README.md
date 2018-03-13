@@ -3,6 +3,7 @@
 Google Apps Script for OpenBadges.me containing Google Forms and Google Sheets add-ons.
 
 **Google Forms add-on** - Create activity events when a form is completed which could be configured to automatically issue badges to the user who created the response.
+
 **Google Sheets add-on** - Create multiple activity events in bulk and manually trigger the processing of the events. Could be configured to automatically issue badges to many users.
 
 ## How to run
