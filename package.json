@@ -9,22 +9,11 @@
   "author": "Harry Mitchinson",
   "license": "ISC",
   "lint-staged": {
-    "*.ts": [
-      "tslint --fix",
-      "prettier --parser typescript --write",
-      "git add"
-    ],
-    "*.json": [
-      "prettier --parser json --write",
-      "git add"
-    ],
-    "*.js": [
-      "prettier --write", 
-      "git add"
-    ]
+    "*.ts": ["tslint --fix", "prettier --parser typescript --write", "git add"],
+    "*.json": ["prettier --parser json --write", "git add"],
+    "*.js": ["prettier --parser babylon --write", "git add"]
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.40",
     "@babel/core": "^7.0.0-beta.40",

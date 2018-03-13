@@ -5,5 +5,19 @@ module.exports = {
   bracketSpacing: true,
   arrowParens: "always",
   semi: true,
-  tabWidth: 2
+  tabWidth: 2,
+  overrides: [
+    {
+      files: "*.js",
+      options: {
+        parser: "bablyon"
+      }
+    },
+    {
+      files: "*.json",
+      options: {
+        parser: "json"
+      }
+    }
+  ]
 };
