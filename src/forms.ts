@@ -31,9 +31,7 @@ function onInstall(): void {
  * saved their OpenBadges config within the google app.
  * @param {FormsUserProperties} props
  */
-function onSaveConfiguration(props: FormsUserProperties): void {
-  // TODO: Validate the provided config, throw errors if validation fails.
-
+function onSaveConfiguration(props: IFormsDocumentProperties): void {
   // Save the properties so they can be used later.
   PropertiesService.getDocumentProperties().setProperties(props);
 
@@ -82,7 +80,7 @@ function onAuthorizationRequired(
   // Get the template for the reauthorization email.
   const template = HtmlService.createTemplate(
     authEmailTemplate
-  ) as AuthTemplate;
+  ) as IAuthTemplate;
   template.authUrl = authInfo.getAuthorizationUrl();
   const html = template.evaluate();
 
@@ -101,7 +99,7 @@ function onAuthorizationRequired(
  * @param {IFormSubmitEvent} e
  * @returns {void}
  */
-function onFormSubmit(e: FormSubmitEvent): void {
+function onFormSubmit(e: IFormSubmitEvent): void {
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
@@ -111,7 +109,7 @@ function onFormSubmit(e: FormSubmitEvent): void {
   }
 
   // Get the script properties which should have been configured.
-  const props = PropertiesService.getDocumentProperties().getProperties() as FormsUserProperties;
+  const props = PropertiesService.getDocumentProperties().getProperties() as IFormsDocumentProperties;
 
   // Stop processing if the properties needed to make a request are not set.
   const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
@@ -136,7 +134,7 @@ function onFormSubmit(e: FormSubmitEvent): void {
 function sendToApi(
   form: GoogleAppsScript.Forms.Form,
   response: GoogleAppsScript.Forms.FormResponse,
-  props: FormsUserProperties
+  props: IFormsDocumentProperties
 ): void {
   // Build the request header.
   const headers = {
@@ -145,7 +143,7 @@ function sendToApi(
   };
 
   // Build the request payload.
-  const payload = {
+  const payload: ICreateActivityEvent = {
     activityId: props.activityId,
     activityTime: response.getTimestamp().toUTCString(),
     text1: props.text1,
@@ -154,7 +152,9 @@ function sendToApi(
     userId: response.getRespondentEmail(),
     int1: props.int1,
     int2: props.int2,
-    date1: props.date1
+    date1: props.date1,
+    firstName: "",
+    lastName: ""
   };
 
   // Use the request headers and payload to create the request params.
@@ -251,7 +251,7 @@ function sendEmail(
  */
 function setDynamicProperties(
   formResponse: GoogleAppsScript.Forms.FormResponse,
-  props: FormsUserProperties
+  props: IFormsDocumentProperties
 ) {
   // Regex to check for {{dynamic properties}}.
   const rgx = new RegExp(/{{.+}}/);
@@ -260,7 +260,7 @@ function setDynamicProperties(
   if (hasDynamicProps) {
     // Load all responses so we can find matching ones.
     const itemResponses = formResponse.getItemResponses();
-    const simpleResponses: SimpleItemResponse[] = itemResponses.map((r) => ({
+    const simpleResponses: ISimpleItemResponse[] = itemResponses.map((r) => ({
       title: r.getItem().getTitle(),
       response: r.getResponse()
     }));
@@ -286,18 +286,15 @@ function showSettingsSidebar(): void {
   // Create the app template from the HTML template.
   const template = HtmlService.createTemplate(
     settingsSidebarTemplate
-  ) as FormsSettingsTemplate;
+  ) as IFormsSettingsTemplate;
 
   // Add the bound properties to the template.
-  const props = PropertiesService.getDocumentProperties().getProperties() as FormsUserProperties;
-  template.apiKey = props.apiKey || "";
-  template.apiToken = props.apiToken || "";
-  template.apiUrl = props.apiUrl || "";
-  template.activityId = props.activityId || "";
-  template.text1 = props.text1 || "";
-  template.int1 = props.int1 || "";
-  template.int2 = props.int2 || "";
-  template.date1 = props.date1 || "";
+  const props = PropertiesService.getDocumentProperties().getProperties() as IFormsDocumentProperties;
+  Object.keys(props)
+    .map((key) => ({ key, value: props[key] }))
+    .forEach((prop) => {
+      template[prop.key] = prop.value || "";
+    });
 
   // Evaluate the template to HTML so bindings are rendered.
   const html = template.evaluate().setTitle("Settings");
@@ -313,7 +310,7 @@ function showAuthModal(): void {
   // Create the template.
   const template = HtmlService.createTemplate(
     authModalTemplate
-  ) as AuthTemplate;
+  ) as IAuthTemplate;
 
   // Add the auth URL to the template.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);

@@ -14,7 +14,7 @@
           <strong>Settings</strong>
         </div>
         <div>
-          Properties can be dynamically retrieved from the sheet using the following format <code>{{B}} where B is the column notation.</code>.
+          Properties can be dynamically retrieved from the sheet using the following format <code>{{B}}</code> where B is the column notation.
         </div>
       </li>
       <li class="collection-item">
@@ -35,8 +35,20 @@
           <label for="activityId">Activity ID</label>
         </div>
         <div class="input-field">
-          <input id="activityId" name="activityId" type="text" class="validate" required value="<?= timestamp ?>">
-          <label for="activityId">Timestamp</label>
+          <input id="activityTime" name="activityTime" type="text" class="validate" required value="<?= activityTime ?>">
+          <label for="activityTime">Activity Time</label>
+        </div>
+        <div class="input-field">
+          <input id="userId" name="userId" type="text" class="validate" required value="<?= userId ?>">
+          <label for="userId">User ID</label>
+        </div>
+        <div class="input-field">
+          <input id="firstName" name="firstName" type="text" class="validate" value="<?= firstName ?>">
+          <label for="firstName">First Name</label>
+        </div>
+        <div class="input-field">
+          <input id="lastName" name="lastName" type="text" class="validate" value="<?= lastName ?>">
+          <label for="lastName">Last Name</label>
         </div>
       </li>
       <li class="collection-item grey lighten-3">
