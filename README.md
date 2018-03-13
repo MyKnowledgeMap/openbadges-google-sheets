@@ -1,6 +1,6 @@
-# Google App Script - OpenBadges
+# Google Apps Script - OpenBadges
 
-Google App Script for OpenBadges.me containing Google Forms and Google Sheets add-ons.
+Google Apps Script for OpenBadges.me containing Google Forms and Google Sheets add-ons.
 
 ## How to run
 
@@ -15,4 +15,4 @@ Google App Script for OpenBadges.me containing Google Forms and Google Sheets ad
     | ERROR_EMAIL | The email address which error emails should be sent from. |
 
 4. Run `npm run build` to transpile and bundle the add-ons.
-5. Copy `forms.js` or `sheets.js` from `dist` to Google App Scripts.
+5. Copy `forms.js` or `sheets.js` from `dist` to Google Apps Scripts.
