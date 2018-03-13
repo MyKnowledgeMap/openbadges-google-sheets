@@ -14,7 +14,14 @@
       "prettier --parser typescript --write",
       "git add"
     ],
-    "*.{js,json,css,md}": ["prettier --write", "git add"]
+    "*.json": [
+      "prettier --parser json --write",
+      "git add"
+    ],
+    "*.js": [
+      "prettier --write", 
+      "git add"
+    ]
   },
   "dependencies": {
   },
