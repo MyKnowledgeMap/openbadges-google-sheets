@@ -31,7 +31,7 @@ Install the Google Sheets add-on on the Google Marketplace.
 4. Run `npm run build` to transpile and bundle the add-ons.
 5. Copy `forms.js` or `sheets.js` from `dist` to Google Apps Scripts.
 
-## Google App Script limitations
+### Google App Script limitations
 
 The limitations of Google Apps Script are easily seen when trying to run the Forms add-on which requires access to the `OnFormSubmit` trigger. This trigger requires full authorization permissions which can only be obtained by installing the add-on from the Google Marketplace. **You will have to install the Myknowledgemap version of the Forms add-on from the marketplace or deploy your own to the marketplace (unlisted/private/public).**
 
