@@ -10,7 +10,7 @@ module.exports = {
     {
       files: "*.js",
       options: {
-        parser: "bablyon"
+        parser: "babylon"
       }
     },
     {

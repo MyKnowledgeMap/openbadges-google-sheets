@@ -37,7 +37,7 @@ function onSaveConfiguration(props: ISheetsDocumentProperties): void {
  * When the user has manually triggered the run event which will
  * try process the sheet and send the request.
  */
-function onRun(): void {
+function onRun(): ICreateActivityEvent[] {
   // Get the current sheet and get total the number of rows.
   const sheet = SpreadsheetApp.getActiveSheet();
   const lastRow = sheet.getLastRow();
@@ -51,6 +51,18 @@ function onRun(): void {
   // Get the document properties.
   const props = PropertiesService.getDocumentProperties().getProperties() as ISheetsDocumentProperties;
 
+  populateDynamicPayloads(props, payloads, sheet);
+  populateStaticPayloads(props, payloads);
+  sendToApi(props, payloads);
+  return payloads;
+}
+
+function populateDynamicPayloads(
+  props: ISheetsDocumentProperties,
+  payloads: ICreateActivityEvent[],
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+) {
+  const lastRow = sheet.getLastRow();
   // Find columns which we need to use the dynamic value for.
   Object.keys(props)
     .filter((key) => dynamicPropRgx.test(props[key]))
@@ -82,7 +94,12 @@ function onRun(): void {
           }
         });
     });
+}
 
+function populateStaticPayloads(
+  props: ISheetsDocumentProperties,
+  payloads: ICreateActivityEvent[]
+) {
   // Set the static properties on the payload objects.
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
@@ -92,7 +109,12 @@ function onRun(): void {
         .filter((payload) => payload[prop.key] === undefined)
         .forEach((payload) => (payload[prop.key] = prop.value))
     );
+}
 
+function sendToApi(
+  props: ISheetsDocumentProperties,
+  payloads: ICreateActivityEvent[]
+) {
   // Build the request header.
   const headers = {
     Authorization: `Bearer ${props.apiToken}`,
@@ -107,8 +129,6 @@ function onRun(): void {
     payload: JSON.stringify(payloads),
     muteHttpExceptions: true
   };
-
-  Logger.log(JSON.stringify(payloads));
 
   // Make the request and get the response.
   const response = UrlFetchApp.fetch(props.apiUrl, options);
@@ -142,3 +162,14 @@ function showSettingsSidebar(): void {
   // Create the sidebar from the HTML.
   SpreadsheetApp.getUi().showSidebar(html);
 }
+
+export {
+  onOpen,
+  onInstall,
+  onSaveConfiguration,
+  onRun,
+  showSettingsSidebar,
+  populateDynamicPayloads,
+  populateStaticPayloads,
+  sendToApi
+};
