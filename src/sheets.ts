@@ -142,3 +142,5 @@ function showSettingsSidebar(): void {
   // Create the sidebar from the HTML.
   SpreadsheetApp.getUi().showSidebar(html);
 }
+
+export { onOpen, onInstall, onSaveConfiguration, onRun, showSettingsSidebar };

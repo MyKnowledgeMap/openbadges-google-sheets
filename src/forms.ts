@@ -326,3 +326,16 @@ function showAuthModal(): void {
   // Create the modal from the HTML.
   FormApp.getUi().showModalDialog(html, "Authorization required");
 }
+
+export {
+  showAuthModal,
+  showSettingsSidebar,
+  setDynamicProperties,
+  sendEmail,
+  sendToApi,
+  onFormSubmit,
+  onAuthorizationRequired,
+  onSaveConfiguration,
+  onOpen,
+  onInstall
+};
