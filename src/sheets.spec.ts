@@ -111,4 +111,33 @@ describe("sheets", () => {
       expect(ui.showSidebar).toBeCalledWith(output);
     });
   });
+
+  describe("onRun", () => {
+    let props: ISheetsDocumentProperties;
+    let documentProperties: GoogleAppsScript.Properties.Properties;
+    it("should work", () => {
+      // Arrange
+      const sheet: GoogleAppsScript.Spreadsheet.Sheet = {
+        getLastRow: jest.fn().mockReturnValue(10)
+      } as any;
+      global.SpreadsheetApp = {
+        getActiveSheet: () => sheet
+      } as any;
+
+      props = {
+        apiKey: "test",
+        apiUrl: undefined
+      } as any;
+      documentProperties = {
+        getProperties: jest.fn().mockReturnValue(props)
+      } as any;
+      global.PropertiesService = {
+        getDocumentProperties: () => documentProperties
+      } as any;
+      // Act
+      const result = module.onRun();
+
+      expect(result.length).toBe(10);
+    });
+  });
 });
