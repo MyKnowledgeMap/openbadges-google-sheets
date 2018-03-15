@@ -37,7 +37,7 @@ function onSaveConfiguration(props: ISheetsDocumentProperties): void {
  * When the user has manually triggered the run event which will
  * try process the sheet and send the request.
  */
-function onRun(): ICreateActivityEvent[] {
+function onRun(): boolean {
   // Get the current sheet and get total the number of rows.
   const sheet = SpreadsheetApp.getActiveSheet();
   const lastRow = sheet.getLastRow();
@@ -53,8 +53,33 @@ function onRun(): ICreateActivityEvent[] {
 
   populateDynamicPayloads(props, payloads, sheet);
   populateStaticPayloads(props, payloads);
-  sendToApi(props, payloads);
-  return payloads;
+
+  // Build the request headers.
+  const headers = {
+    Authorization: `Bearer ${props.apiToken}`,
+    ApiKey: props.apiKey
+  };
+
+  // Use the request headers and payload to create the request params.
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    contentType: "application/json",
+    headers,
+    payload: JSON.stringify(payloads),
+    muteHttpExceptions: true
+  };
+
+  // Make the request and get the response.
+  const response = UrlFetchApp.fetch(props.apiUrl, options);
+
+  // If the response code is 200 Ok then we can stop processing as it was a successful request.
+  const responseCode = response.getResponseCode();
+
+  if (responseCode === 200) {
+    return true;
+  }
+  Logger.log(response.getContentText());
+  return false;
 }
 
 function populateDynamicPayloads(
@@ -83,16 +108,17 @@ function populateDynamicPayloads(
       const values = (sheet.getRange(query).getValues() as IGetValuesResult)
         // GetValues returns an Object[row][column] and we only care about the first
         // column so project to the column.
-        .map((value) => value[0])
-        .forEach((value, rowIndex) => {
-          // Dates have to be handled differently since toString() will
-          // produce a value that the service cannot parse.
-          if (value instanceof Date) {
-            payloads[rowIndex][column.key] = value.toUTCString();
-          } else {
-            payloads[rowIndex][column.key] = value.toString();
-          }
-        });
+        .map((value) => value[0]);
+
+      values.forEach((value, rowIndex) => {
+        // Dates have to be handled differently since toString() will
+        // produce a value that the service cannot parse.
+        if (value instanceof Date) {
+          payloads[rowIndex][column.key] = value.toUTCString();
+        } else {
+          payloads[rowIndex][column.key] = value.toString();
+        }
+      });
     });
 }
 
@@ -109,34 +135,6 @@ function populateStaticPayloads(
         .filter((payload) => payload[prop.key] === undefined)
         .forEach((payload) => (payload[prop.key] = prop.value))
     );
-}
-
-function sendToApi(
-  props: ISheetsDocumentProperties,
-  payloads: ICreateActivityEvent[]
-) {
-  // Build the request header.
-  const headers = {
-    Authorization: `Bearer ${props.apiToken}`,
-    ApiKey: props.apiKey
-  };
-
-  // Use the request headers and payload to create the request params.
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    contentType: "application/json",
-    headers,
-    payload: JSON.stringify(payloads),
-    muteHttpExceptions: true
-  };
-
-  // Make the request and get the response.
-  const response = UrlFetchApp.fetch(props.apiUrl, options);
-
-  // If the response code is 200 Ok then we can stop processing as it was a successful request.
-  if (response.getResponseCode() !== 200) {
-    Logger.log(response.getContentText());
-  }
 }
 
 /**
@@ -170,6 +168,5 @@ export {
   onRun,
   showSettingsSidebar,
   populateDynamicPayloads,
-  populateStaticPayloads,
-  sendToApi
+  populateStaticPayloads
 };
