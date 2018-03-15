@@ -9,9 +9,8 @@ function onOpen(): void {
   const menu = FormApp.getUi().createAddonMenu();
   // Check whether the user has full auth, otherwise make them authorize.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-  if (
-    authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED
-  ) {
+  const status = authInfo.getAuthorizationStatus();
+  if (status === ScriptApp.AuthorizationStatus.REQUIRED) {
     menu.addItem("Authorize", "showAuthModal");
   } else {
     menu.addItem("Settings", "showSettingsSidebar");
@@ -32,16 +31,17 @@ function onInstall(): void {
  * @param {FormsUserProperties} props
  */
 function onSaveConfiguration(props: IFormsDocumentProperties): void {
-  // Save the properties so they can be used later.
   PropertiesService.getDocumentProperties().setProperties(props);
+  createTriggerIfNotExist();
+}
 
+function createTriggerIfNotExist() {
   // See if we have to create a trigger.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
   if (authStatus !== ScriptApp.AuthorizationStatus.REQUIRED) {
     // Trigger for the onFormSubmit event.
     const triggers = ScriptApp.getProjectTriggers();
-    Logger.log(`Amount of triggers ${triggers.length}`);
 
     // Check if there is an existing onFormSubmit trigger.
     const triggerExists = triggers.some(
@@ -337,5 +337,6 @@ export {
   onAuthorizationRequired,
   onSaveConfiguration,
   onOpen,
-  onInstall
+  onInstall,
+  createTriggerIfNotExist
 };

@@ -1,14 +1,13 @@
 import * as module from "./sheets";
 
-declare var global: Global;
-// tslint:disable-next-line:interface-name
-export interface Global {
+interface IGlobal {
   SpreadsheetApp: GoogleAppsScript.Spreadsheet.SpreadsheetApp;
   PropertiesService: GoogleAppsScript.Properties.PropertiesService;
   HtmlService: GoogleAppsScript.HTML.HtmlService;
   UrlFetchApp: GoogleAppsScript.URL_Fetch.UrlFetchApp;
   Logger: GoogleAppsScript.Base.Logger;
 }
+declare const global: IGlobal;
 
 describe("sheets", () => {
   beforeAll(() => {
