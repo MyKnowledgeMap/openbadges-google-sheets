@@ -57,7 +57,9 @@ describe("forms", () => {
         createAddonMenu: () => menu
       } as any;
 
-      global.FormApp = { getUi: () => ui } as any;
+      global.FormApp = {
+        getUi: () => ui
+      } as any;
 
       // Act
       fnUnderTest();
