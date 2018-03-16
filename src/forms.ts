@@ -106,18 +106,19 @@ function onAuthorizationRequired(
  * @param {IFormSubmitEvent} e
  * @returns {void}
  */
-function onFormSubmit(e: IFormSubmitEvent): void {
+function onFormSubmit(e: IFormSubmitEvent): boolean {
   // Get the script properties which should have been configured.
   const documentProperties = PropertiesService.getDocumentProperties();
-  const props = documentProperties.getProperties() as IFormsDocumentProperties;
 
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
   if (authStatus === ScriptApp.AuthorizationStatus.REQUIRED) {
     onAuthorizationRequired(authInfo, documentProperties);
-    return;
+    return false;
   }
+
+  const props = documentProperties.getProperties() as IFormsDocumentProperties;
 
   // Stop processing if the properties needed to make a request are not set.
   const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
@@ -126,11 +127,11 @@ function onFormSubmit(e: IFormSubmitEvent): void {
     .every((result) => result);
   if (!hasRequiredProperties) {
     Logger.log("Request cancelled as required properties are missing.");
-    return;
+    return false;
   }
 
   setDynamicProperties(e.response, props);
-  sendToApi(e.source, e.response, props);
+  return sendToApi(e.source, e.response, props);
 }
 
 /**
@@ -143,9 +144,9 @@ function sendToApi(
   form?: GoogleAppsScript.Forms.Form,
   response?: GoogleAppsScript.Forms.FormResponse,
   props?: IFormsDocumentProperties
-): void {
+): boolean {
   if (form === undefined || response === undefined || props === undefined) {
-    return;
+    return false;
   }
 
   // Build the request header.
@@ -185,7 +186,7 @@ function sendToApi(
     // If the response code is 200 Ok then we can stop processing as it was a successful request.
     const responseCode = result.getResponseCode();
     if (responseCode === 200) {
-      return;
+      return true;
     }
 
     if (retry === 2) {
@@ -200,6 +201,7 @@ function sendToApi(
       Utilities.sleep(500);
     }
   }
+  return false;
 }
 
 /**

@@ -8,6 +8,7 @@ interface IGlobal {
   Logger: GoogleAppsScript.Base.Logger;
   ScriptApp: GoogleAppsScript.Script.ScriptApp;
   Session: GoogleAppsScript.Base.Session;
+  Utilities: GoogleAppsScript.Utilities.Utilities;
 }
 declare const global: IGlobal;
 
@@ -201,9 +202,8 @@ describe("forms", () => {
   });
 
   describe("onAuthorizationRequired", () => {
-    const expectReturnFalse = (authInfo: any, properties: any) => {
+    const expectReturnFalse = (authInfo: any, properties: any) =>
       expect(module.onAuthorizationRequired(authInfo, properties)).toBe(false);
-    };
 
     // Helpers
     const today = new Date().toDateString();
@@ -290,9 +290,8 @@ describe("forms", () => {
       contentType: "contentType"
     };
 
-    const expectReturnFalse = (x: any) => {
+    const expectReturnFalse = (x: any) =>
       expect(module.sendEmail(x)).toBe(false);
-    };
 
     describe("when model.to is undefined", () => {
       const model = { ...valid, to: undefined };
@@ -329,6 +328,167 @@ describe("forms", () => {
       it("should make request", () => expect(UrlFetchApp.fetch).toBeCalled());
 
       it("should return true", () => expect(result).toBe(true));
+    });
+  });
+
+  describe("onFormSubmit", () => {
+    // Setup the auth status for the test.
+    const setupScriptApp = (status: AuthorizationStatus) => {
+      const info: GoogleAppsScript.Script.AuthorizationInfo = {
+        getAuthorizationStatus: jest.fn().mockReturnValue(status)
+      } as any;
+      global.ScriptApp = {
+        getAuthorizationInfo: jest.fn().mockReturnValue(info),
+        AuthorizationStatus,
+        AuthMode
+      } as any;
+    };
+
+    const setupProperties = (props?: any) => {
+      let documentProperties: GoogleAppsScript.Properties.Properties;
+      if (props !== undefined) {
+        documentProperties = {
+          getProperties: jest.fn().mockReturnValue(props)
+        } as any;
+      }
+
+      global.PropertiesService = {
+        getDocumentProperties: jest.fn().mockReturnValue(documentProperties!)
+      } as any;
+    };
+
+    describe("when auth status is required", () => {
+      it("should stop processing", () => {
+        // Arrange
+        setupScriptApp(AuthorizationStatus.REQUIRED);
+        setupProperties();
+
+        // Act
+        const result = module.onFormSubmit({} as any);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    const expectRequiredPropertyFalse = (key: string) => {
+      // Arrange
+      setupScriptApp(AuthorizationStatus.NOT_REQUIRED);
+
+      const props = {} as any;
+      props[key] = "value";
+      setupProperties(props);
+
+      // Act
+      const result = module.onFormSubmit({} as any);
+
+      // Assert
+      expect(result).toBe(false);
+    };
+
+    describe("when required properties not set", () => {
+      it("return false for missing api url", () =>
+        expectRequiredPropertyFalse("apiUrl"));
+      it("return false for missing api token", () =>
+        expectRequiredPropertyFalse("apiToken"));
+      it("return false for missing api key", () =>
+        expectRequiredPropertyFalse("apiKey"));
+    });
+
+    describe("when required properties set", () => {
+      // Arrange
+      setupScriptApp(AuthorizationStatus.NOT_REQUIRED);
+      setupProperties({ apiKey: "value", apiUrl: "value", apiToken: "value" });
+
+      // Act
+      const result = module.onFormSubmit({} as any);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("sendToApi", () => {
+    const expectReturnFalse = (form: any, response: any, props: any) =>
+      expect(module.sendToApi(form, response, props)).toBe(false);
+
+    describe("when form is undefined", () =>
+      it("should return false", () => expectReturnFalse(undefined, {}, {})));
+
+    describe("when response is undefined", () =>
+      it("should return false", () => expectReturnFalse({}, undefined, {})));
+
+    describe("when props is undefined", () =>
+      it("should return false", () => expectReturnFalse({}, {}, undefined)));
+
+    const setupFormResponse = () => {
+      const form: GoogleAppsScript.Forms.Form = {
+        getId: jest.fn().mockReturnValue("id")
+      } as any;
+      const response: GoogleAppsScript.Forms.FormResponse = {
+        getTimestamp: jest.fn().mockReturnValue(new Date()),
+        getRespondentEmail: jest.fn().mockReturnValue("email")
+      } as any;
+      return { form, response };
+    };
+
+    let httpResponse: GoogleAppsScript.URL_Fetch.HTTPResponse;
+    const setupUrlFetch = (statusCode: number) => {
+      httpResponse = {
+        getResponseCode: jest.fn().mockReturnValue(statusCode),
+        getContentText: jest.fn()
+      } as any;
+      global.UrlFetchApp = {
+        fetch: jest.fn().mockReturnValue(httpResponse)
+      } as any;
+    };
+
+    describe("when request is successful", () => {
+      // Arrange
+      const { form, response } = setupFormResponse();
+      setupUrlFetch(200);
+
+      // Act
+      const result = module.sendToApi(form, response, {} as any);
+
+      it("should attach timestamp to payload", () =>
+        expect(response.getTimestamp).toBeCalled());
+      it("should attach form id to payload", () =>
+        expect(form.getId).toBeCalled());
+      it("should attach email to payload", () =>
+        expect(response.getRespondentEmail).toHaveBeenCalledTimes(2));
+      it("should return true", () => expect(result).toBe(true));
+    });
+
+    describe("when request is not successful", () => {
+      // Arrange
+      const { form, response } = setupFormResponse();
+      setupUrlFetch(500);
+
+      const user: GoogleAppsScript.Base.User = { getEmail: jest.fn() } as any;
+      global.Session = {
+        getEffectiveUser: jest.fn().mockReturnValue(user)
+      } as any;
+
+      global.Utilities = {
+        sleep: jest.fn()
+      } as any;
+
+      global.Logger = {
+        log: jest.fn()
+      } as any;
+
+      // Act
+      const result = module.sendToApi(form, response, {} as any);
+
+      // Assert
+      it("should retry 3 times", () =>
+        expect(UrlFetchApp.fetch).toHaveBeenCalledTimes(3));
+      it("should wait between each retry", () =>
+        expect(Utilities.sleep).toBeCalledWith(expect.any(Number)));
+      it("should build email if failed 3 times", () =>
+        expect(httpResponse.getContentText).toBeCalled());
+      it("should return false", () => expect(result).toBe(false));
     });
   });
 
