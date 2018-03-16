@@ -714,4 +714,6 @@ describe("forms", () => {
     it("should bind auth url to template", () =>
       expect(template.authUrl).toBe(authUrl));
   });
+
+  it("should be true", () => expect(true).toBe(true));
 });

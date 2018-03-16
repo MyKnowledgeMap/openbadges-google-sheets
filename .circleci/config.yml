@@ -32,9 +32,24 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-        
-      # run tests!
-      - run: npm test
+      
+      - run: mkdir junit
+
+      - run:
+          name: "npm run lint"
+          command: npm run lint -- --out junit/tslint-results.xml --format junit
+
+      - run:
+          name: "npm test"
+          environment:
+            JEST_JUNIT_OUTPUT: junit/jest-results.xml
+          command: npm test -- --ci --testResultsProcessor="jest-junit"
+
+      - store_test_results:
+          path: junit
 
       # build
       - run: npm run build
+
+      - store_artifacts:
+          path: dist

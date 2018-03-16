@@ -5,7 +5,8 @@
   "scripts": {
     "precommit": "lint-staged",
     "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
-    "test": "jest --collectCoverage"
+    "test": "jest --collectCoverage",
+    "lint": "./node_modules/.bin/tslint --project \".\""
   },
   "author": "Harry Mitchinson",
   "license": "ISC",
@@ -29,6 +30,7 @@
     "dotenv-safe": "^5.0.1",
     "husky": "^0.14.3",
     "jest": "^22.4.2",
+    "jest-junit": "^3.6.0",
     "lint-staged": "^7.0.0",
     "prettier": "1.11.1",
     "ts-jest": "^22.4.1",
