@@ -6,6 +6,8 @@ Google Apps Script for OpenBadges.me containing Google Forms and Google Sheets a
 
 **Google Sheets add-on** - Create activity events in bulk and manually trigger the processing of the events. Could be configured to automatically issue badges to many users.
 
+[![CircleCI](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master.svg?style=svg)](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master)
+
 ## How to install
 
 Install the Google Forms add-on on the Google Marketplace.
