@@ -26,15 +26,32 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: npm install
+      - run: 
+          name: "Install dependencies"
+          command: "npm install"
 
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-        
-      # run tests!
-      - run: npm test
+      
+      - run: mkdir ~/junit
+
+      - run:
+          name: "Lint"
+          command: "npm run lint -- --out  "junit/tslint-results.xml" --format junit"
+
+      - run:
+          name: "Test"
+          command: npm test -- --ci --testResultsProcessor="jest-junit"
+          environment:
+            JEST_JUNIT_OUTPUT: "~/junit/jest-results.xml"
+
+      - store_test_results:
+          path: ~/junit
+
+      - store_artifacts:
+          path: ~/junit
 
       # build
       - run: npm run build
