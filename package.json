@@ -6,6 +6,8 @@
     "precommit": "lint-staged",
     "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
     "test": "jest --collectCoverage",
+    "test:ci":
+      "npm run test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "./node_modules/.bin/tslint --project \".\""
   },
   "author": "Harry Mitchinson",
@@ -27,6 +29,7 @@
     "babel-plugin-transform-html-import-to-string": "0.0.1",
     "babel-plugin-transform-inline-environment-variables": "^0.3.0",
     "babel-plugin-transform-remove-export": "^1.0.0",
+    "coveralls": "^3.0.0",
     "dotenv-safe": "^5.0.1",
     "husky": "^0.14.3",
     "jest": "^22.4.2",
