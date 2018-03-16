@@ -6,50 +6,46 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
       - image: circleci/node:8.9.4
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mongo:3.4.4
-
     working_directory: ~/repo
-
     steps:
+      # Checkout the source code.
       - checkout
 
-      # Download and cache dependencies
+      # Download and cache dependencies.
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
       - run: npm install
-
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
       
-      - run: mkdir junit
+      # Build the app.
+      - run: npm run build
+      
+      # Create the reports folder for tests. 
+      - run: mkdir reports
 
+      # Run tslint on the project.
       - run:
           name: "npm run lint"
-          command: npm run lint -- --out junit/tslint-results.xml --format junit
+          command: npm run lint -- --out reports/tslint-results.xml --format junit
 
+      # Run the test suite.
       - run:
-          name: "npm test"
+          name: "npm run test"
           environment:
-            JEST_JUNIT_OUTPUT: junit/jest-results.xml
+            JEST_JUNIT_OUTPUT: reports/jest-results.xml
           command: npm test -- --ci --testResultsProcessor="jest-junit"
 
+      # Store the test reports.
       - store_test_results:
-          path: junit
-
-      # build
-      - run: npm run build
-
+          path: reports
+          
+      # Store the build artifacts.
       - store_artifacts:
           path: dist
