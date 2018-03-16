@@ -1,14 +1,13 @@
 import * as module from "./sheets";
 
-declare var global: Global;
-// tslint:disable-next-line:interface-name
-export interface Global {
+interface IGlobal {
   SpreadsheetApp: GoogleAppsScript.Spreadsheet.SpreadsheetApp;
   PropertiesService: GoogleAppsScript.Properties.PropertiesService;
   HtmlService: GoogleAppsScript.HTML.HtmlService;
   UrlFetchApp: GoogleAppsScript.URL_Fetch.UrlFetchApp;
   Logger: GoogleAppsScript.Base.Logger;
 }
+declare const global: IGlobal;
 
 describe("sheets", () => {
   beforeAll(() => {
@@ -35,7 +34,9 @@ describe("sheets", () => {
       // Assert
       expect(spreadsheet.addMenu).toBeCalled();
     };
+
     it("onInstall should add menu", () => expectMenu(module.onInstall));
+
     it("onOpen should add menu", () => expectMenu(module.onOpen));
   });
 
@@ -114,34 +115,22 @@ describe("sheets", () => {
       module.showSettingsSidebar();
     });
 
-    it("should fetch template from module", () => {
-      // Assert
-      expect(global.HtmlService.createTemplate).toBeCalled();
-    });
+    it("should fetch template from module", () =>
+      expect(global.HtmlService.createTemplate).toBeCalled());
 
-    it("should set the html title", () => {
-      // Assert
-      expect(output.setTitle).toBeCalledWith("Settings");
-    });
+    it("should set the html title", () =>
+      expect(output.setTitle).toBeCalledWith("Settings"));
 
-    it("should use the html to display sidebar", () => {
-      // Assert
-      expect(ui.showSidebar).toBeCalledWith(output);
-    });
+    it("should use the html to display sidebar", () =>
+      expect(ui.showSidebar).toBeCalledWith(output));
 
-    describe("when property is defined", () => {
-      it("should bind value to template", () => {
-        // Assert
-        expect(template.apiKey).toBe(props.apiKey);
-      });
-    });
+    describe("when property is defined", () =>
+      it("should bind value to template", () =>
+        expect(template.apiKey).toBe(props.apiKey)));
 
-    describe("when property is undefined", () => {
-      it("should bind value to template as empty string", () => {
-        // Assert
-        expect(template.apiUrl).toBe("");
-      });
-    });
+    describe("when property is undefined", () =>
+      it("should bind value to template as empty string", () =>
+        expect(template.apiUrl).toBe("")));
   });
 
   describe("onRun", () => {

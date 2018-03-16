@@ -2,6 +2,8 @@ import authEmailTemplate from "./templates/auth.email.html";
 import authModalTemplate from "./templates/auth.modal.html";
 import settingsSidebarTemplate from "./templates/forms-settings.sidebar.html";
 
+const rgx = new RegExp(/{{.+}}/);
+
 /**
  * The onOpen event function which runs when the document/form is opened.
  */
@@ -9,9 +11,8 @@ function onOpen(): void {
   const menu = FormApp.getUi().createAddonMenu();
   // Check whether the user has full auth, otherwise make them authorize.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-  if (
-    authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED
-  ) {
+  const status = authInfo.getAuthorizationStatus();
+  if (status === ScriptApp.AuthorizationStatus.REQUIRED) {
     menu.addItem("Authorize", "showAuthModal");
   } else {
     menu.addItem("Settings", "showSettingsSidebar");
@@ -32,16 +33,17 @@ function onInstall(): void {
  * @param {FormsUserProperties} props
  */
 function onSaveConfiguration(props: IFormsDocumentProperties): void {
-  // Save the properties so they can be used later.
   PropertiesService.getDocumentProperties().setProperties(props);
+  createTriggerIfNotExist();
+}
 
+function createTriggerIfNotExist() {
   // See if we have to create a trigger.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
   if (authStatus !== ScriptApp.AuthorizationStatus.REQUIRED) {
     // Trigger for the onFormSubmit event.
     const triggers = ScriptApp.getProjectTriggers();
-    Logger.log(`Amount of triggers ${triggers.length}`);
 
     // Check if there is an existing onFormSubmit trigger.
     const triggerExists = triggers.some(
@@ -66,15 +68,19 @@ function onSaveConfiguration(props: IFormsDocumentProperties): void {
  * @returns {void}
  */
 function onAuthorizationRequired(
-  authInfo: GoogleAppsScript.Script.AuthorizationInfo
-): void {
-  const properties = PropertiesService.getDocumentProperties();
+  authInfo?: GoogleAppsScript.Script.AuthorizationInfo,
+  properties?: GoogleAppsScript.Properties.Properties
+): boolean {
+  if (authInfo === undefined || properties === undefined) {
+    return false;
+  }
+
   const lastAuthEmailDate = properties.getProperty("lastAuthEmailDate");
   const todayDate = new Date().toDateString();
 
   // Check whether the user has already received an email for reauth today.
   if (lastAuthEmailDate === todayDate) {
-    return;
+    return false;
   }
 
   // Get the template for the reauthorization email.
@@ -85,13 +91,14 @@ function onAuthorizationRequired(
   const html = template.evaluate();
 
   // Send the email with the reauthorization link.
-  const recipient = Session.getEffectiveUser().getEmail();
+  const to = Session.getEffectiveUser().getEmail();
   const subject = "OpenBadges - Authorization is required.";
   const body = html.getContent();
-  sendEmail(recipient, subject, body, "text/html");
+  sendEmail({ to, subject, body, contentType: "text/html" });
 
   // Update the lastAuthEmailDate property.
   properties.setProperty("lastAuthEmailDate", todayDate);
+  return true;
 }
 
 /**
@@ -99,17 +106,19 @@ function onAuthorizationRequired(
  * @param {IFormSubmitEvent} e
  * @returns {void}
  */
-function onFormSubmit(e: IFormSubmitEvent): void {
+function onFormSubmit(e: IFormSubmitEvent): boolean {
+  // Get the script properties which should have been configured.
+  const documentProperties = PropertiesService.getDocumentProperties();
+
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
   if (authStatus === ScriptApp.AuthorizationStatus.REQUIRED) {
-    onAuthorizationRequired(authInfo);
-    return;
+    onAuthorizationRequired(authInfo, documentProperties);
+    return false;
   }
 
-  // Get the script properties which should have been configured.
-  const props = PropertiesService.getDocumentProperties().getProperties() as IFormsDocumentProperties;
+  const props = documentProperties.getProperties() as IFormsDocumentProperties;
 
   // Stop processing if the properties needed to make a request are not set.
   const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
@@ -118,11 +127,11 @@ function onFormSubmit(e: IFormSubmitEvent): void {
     .every((result) => result);
   if (!hasRequiredProperties) {
     Logger.log("Request cancelled as required properties are missing.");
-    return;
+    return false;
   }
 
   setDynamicProperties(e.response, props);
-  sendToApi(e.source, e.response, props);
+  return sendToApi(e.source, e.response, props);
 }
 
 /**
@@ -132,10 +141,14 @@ function onFormSubmit(e: IFormSubmitEvent): void {
  * @param {FormsUserProperties} props
  */
 function sendToApi(
-  form: GoogleAppsScript.Forms.Form,
-  response: GoogleAppsScript.Forms.FormResponse,
-  props: IFormsDocumentProperties
-): void {
+  form?: GoogleAppsScript.Forms.Form,
+  response?: GoogleAppsScript.Forms.FormResponse,
+  props?: IFormsDocumentProperties
+): boolean {
+  if (form === undefined || response === undefined || props === undefined) {
+    return false;
+  }
+
   // Build the request header.
   const headers = {
     Authorization: `Bearer ${props.apiToken}`,
@@ -173,41 +186,59 @@ function sendToApi(
     // If the response code is 200 Ok then we can stop processing as it was a successful request.
     const responseCode = result.getResponseCode();
     if (responseCode === 200) {
-      return;
+      return true;
     }
 
     if (retry === 2) {
       Logger.log("Request %s failed. Sending email to Form owner...", retry);
-      const recipient = Session.getEffectiveUser().getEmail();
+      const to = Session.getEffectiveUser().getEmail();
       const subject =
         "OpenBadges - An error occurred after form was submitted.";
       const body = result.getContentText();
-      sendEmail(recipient, subject, body, "text/plain");
+      sendEmail({ to, subject, body, contentType: "text/plain" });
     } else {
       Logger.log("Request %s failed. Retrying...", retry);
       Utilities.sleep(500);
     }
   }
+  return false;
 }
 
 /**
  * Send an email using the SendGrid API.
  * https://sendgrid.com/docs/API_Reference/api_v3.html
- * @param {string} to the email address the email should be sent to.
- * @param {string} subject the subject of the email.
- * @param {string} body the body of the email.
- * @param {string} contentType the content type of the email body.
+ * @param {{
+ *   to?: string;
+ *   subject?: string;
+ *   body?: string;
+ *   contentType?: string;
+ * }} {
+ *   to,
+ *   subject,
+ *   body,
+ *   contentType
+ * }
+ * @returns {void}
  */
-function sendEmail(
-  to: string,
-  subject: string,
-  body: string,
-  contentType: string
-): void {
-  // Create the header with the api key.
-  const headers = {
-    Authorization: `Bearer ${process.env.SENDGRID_KEY!}`
-  };
+function sendEmail({
+  to,
+  subject,
+  body,
+  contentType
+}: {
+  to?: string;
+  subject?: string;
+  body?: string;
+  contentType?: string;
+}): boolean {
+  if (
+    to === undefined ||
+    subject === undefined ||
+    body === undefined ||
+    contentType === undefined
+  ) {
+    return false;
+  }
 
   // Create the request payload.
   const payload = {
@@ -232,6 +263,11 @@ function sendEmail(
     ]
   };
 
+  // Create the header with the api key.
+  const headers = {
+    Authorization: `Bearer ${process.env.SENDGRID_KEY!}`
+  };
+
   // Create the URL request options.
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -242,6 +278,7 @@ function sendEmail(
 
   // Make the request.
   const response = UrlFetchApp.fetch(process.env.SENDGRID_URL!, options);
+  return true;
 }
 
 /**
@@ -250,11 +287,13 @@ function sendEmail(
  * @param {FormsUserProperties} props
  */
 function setDynamicProperties(
-  formResponse: GoogleAppsScript.Forms.FormResponse,
-  props: IFormsDocumentProperties
-) {
-  // Regex to check for {{dynamic properties}}.
-  const rgx = new RegExp(/{{.+}}/);
+  formResponse?: GoogleAppsScript.Forms.FormResponse,
+  props?: IFormsDocumentProperties
+): boolean {
+  if (formResponse === undefined || props === undefined) {
+    return false;
+  }
+
   const hasDynamicProps = Object.keys(props).some((x) => rgx.test(props[x]));
 
   if (hasDynamicProps) {
@@ -267,17 +306,19 @@ function setDynamicProperties(
       }));
 
     Object.keys(props)
-      .map((key) => props[key].toLowerCase())
-      .filter((prop) => rgx.test(prop))
+      .map((key) => ({ key, value: props[key].toLowerCase() }))
+      .filter((prop) => rgx.test(prop.value))
       .forEach((prop) => {
-        const responseToUse = responses.filter(
-          (resp) => prop.indexOf(resp.title.toLowerCase()) !== -1
+        const titleFromProp = prop.value.replace("{{", "").replace("}}", "");
+        const item = responses.filter(
+          (resp) => titleFromProp === resp.title.toLowerCase()
         )[0];
-        if (responseToUse !== undefined) {
-          prop = responseToUse.response;
+        if (item !== undefined) {
+          props[prop.key] = item.response;
         }
       });
   }
+  return true;
 }
 
 /**
@@ -337,5 +378,6 @@ export {
   onAuthorizationRequired,
   onSaveConfiguration,
   onOpen,
-  onInstall
+  onInstall,
+  createTriggerIfNotExist
 };
