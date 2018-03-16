@@ -72,19 +72,25 @@ describe("forms", () => {
     };
 
     describe("when authorization required", () => {
-      const args = ["Authorize", "showAuthModal"];
       beforeAll(() => setupScriptApp(AuthorizationStatus.REQUIRED));
+
+      const args = ["Authorize", "showAuthModal"];
+
       it("onInstall should add authorize menu", () =>
         expectMenu(module.onInstall, args));
+
       it("onOpen should add authorize menu", () =>
         expectMenu(module.onOpen, args));
     });
 
     describe("when authorization not required", () => {
-      const args = ["Settings", "showSettingsSidebar"];
       beforeAll(() => setupScriptApp(AuthorizationStatus.NOT_REQUIRED));
+
+      const args = ["Settings", "showSettingsSidebar"];
+
       it("onInstall should add settings menu", () =>
         expectMenu(module.onInstall, args));
+
       it("onOpen should add settings menu", () =>
         expectMenu(module.onOpen, args));
     });
@@ -102,6 +108,7 @@ describe("forms", () => {
         AuthMode
       } as any;
     };
+
     it("should set properties", () => {
       // Arrange
       const documentProperties: GoogleAppsScript.Properties.Properties = {
@@ -153,6 +160,7 @@ describe("forms", () => {
 
       return formTriggerBuilder.create;
     };
+
     describe("when trigger does exist", () => {
       it("should not create new trigger", () => {
         // Arrange
@@ -193,27 +201,34 @@ describe("forms", () => {
   });
 
   describe("onAuthorizationRequired", () => {
+    const expectReturnFalse = (p: any, a: any) => {
+      expect(module.onAuthorizationRequired(a, p)).toBe(false);
+    };
+
+    // Helpers
+    const today = new Date().toDateString();
+    const notToday = ((d: Date) => new Date(d.setDate(d.getDate() - 7)))(
+      new Date()
+    );
+
+    describe("when auth info is undefined", () =>
+      it("should return false", () => expectReturnFalse({}, undefined)));
+
+    describe("when properties is undefined", () =>
+      it("should return false", () => expectReturnFalse(undefined, {})));
+
     describe("when last auth date is today", () => {
-      it("should return false", () => {
-        // Arrange
-        const today = new Date().toDateString();
-        const properties: GoogleAppsScript.Properties.Properties = {
-          getProperty: jest.fn().mockReturnValue(today)
-        } as any;
-
-        // Act
-        const result = module.onAuthorizationRequired({} as any, properties);
-
-        // Assert
-        expect(result).toBe(false);
-      });
+      it("should return false", () =>
+        expectReturnFalse(
+          {
+            getProperty: jest.fn().mockReturnValue(today)
+          },
+          {}
+        ));
     });
 
     describe("when last auth date is not today", () => {
       // Arrange
-      const notToday = ((d: Date) => new Date(d.setDate(d.getDate() - 7)))(
-        new Date()
-      );
       const properties: GoogleAppsScript.Properties.Properties = {
         getProperty: jest.fn().mockReturnValue(notToday),
         setProperty: jest.fn()
@@ -247,20 +262,14 @@ describe("forms", () => {
       // Act
       const result = module.onAuthorizationRequired(authInfo, properties);
 
-      it("should set auth url on template", () => {
-        // Assert
-        expect(template.authUrl).toBe(authUrl);
-      });
+      it("should set auth url on template", () =>
+        expect(template.authUrl).toBe(authUrl));
 
-      it("should prepare email with user email", () => {
-        // Assert
-        expect(user.getEmail).toBeCalled();
-      });
+      it("should prepare email with user email", () =>
+        expect(user.getEmail).toBeCalled());
 
-      it("should prepare email with html content", () => {
-        // Assert
-        expect(html.getContent).toBeCalled();
-      });
+      it("should prepare email with html content", () =>
+        expect(html.getContent).toBeCalled());
 
       it("should update last auth email date property to today", () => {
         // Assert
@@ -269,10 +278,57 @@ describe("forms", () => {
         expect(args[1]).toBe(new Date().toDateString());
       });
 
-      it("should return true", () => {
-        // Assert
-        expect(result).toBe(true);
-      });
+      it("should return true", () => expect(result).toBe(true));
+    });
+  });
+
+  describe("sendEmail", () => {
+    const valid = {
+      to: "to",
+      subject: "subject",
+      body: "body",
+      contentType: "contentType"
+    };
+
+    const expectReturnFalse = (x: any) => {
+      expect(module.sendEmail(x)).toBe(false);
+    };
+
+    describe("when model.to is undefined", () => {
+      const model = { ...valid, to: undefined };
+      it("should return false", () => expectReturnFalse(model));
+    });
+
+    describe("when model.subject is undefined", () => {
+      const model = { ...valid, subject: undefined };
+      it("should return false", () => expectReturnFalse(model));
+    });
+
+    describe("when model.body is undefined", () => {
+      const model = { ...valid, body: undefined };
+      it("should return false", () => expectReturnFalse(model));
+    });
+
+    describe("when model.contentType is undefined", () => {
+      const model = { ...valid, contentType: undefined };
+      it("should return false", () => expectReturnFalse(model));
+    });
+
+    describe("when model is valid", () => {
+      // Arrange
+      const model = { ...valid };
+
+      global.UrlFetchApp = {
+        fetch: jest.fn()
+      } as any;
+
+      // Act
+      const result = module.sendEmail(model);
+
+      // Assert
+      it("should make request", () => expect(UrlFetchApp.fetch).toBeCalled());
+
+      it("should return true", () => expect(result).toBe(true));
     });
   });
 });

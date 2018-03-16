@@ -66,9 +66,13 @@ function createTriggerIfNotExist() {
  * @returns {void}
  */
 function onAuthorizationRequired(
-  authInfo: GoogleAppsScript.Script.AuthorizationInfo,
-  properties: GoogleAppsScript.Properties.Properties
+  authInfo?: GoogleAppsScript.Script.AuthorizationInfo,
+  properties?: GoogleAppsScript.Properties.Properties
 ): boolean {
+  if (authInfo === undefined || properties === undefined) {
+    return false;
+  }
+
   const lastAuthEmailDate = properties.getProperty("lastAuthEmailDate");
   const todayDate = new Date().toDateString();
 
@@ -222,14 +226,14 @@ function sendEmail({
   subject?: string;
   body?: string;
   contentType?: string;
-}): void {
+}): boolean {
   if (
     to === undefined ||
     subject === undefined ||
     body === undefined ||
     contentType === undefined
   ) {
-    return;
+    return false;
   }
 
   // Create the request payload.
@@ -270,6 +274,7 @@ function sendEmail({
 
   // Make the request.
   const response = UrlFetchApp.fetch(process.env.SENDGRID_URL!, options);
+  return true;
 }
 
 /**
