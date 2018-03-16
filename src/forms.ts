@@ -2,6 +2,8 @@ import authEmailTemplate from "./templates/auth.email.html";
 import authModalTemplate from "./templates/auth.modal.html";
 import settingsSidebarTemplate from "./templates/forms-settings.sidebar.html";
 
+const rgx = new RegExp(/{{.+}}/);
+
 /**
  * The onOpen event function which runs when the document/form is opened.
  */
@@ -283,11 +285,13 @@ function sendEmail({
  * @param {FormsUserProperties} props
  */
 function setDynamicProperties(
-  formResponse: GoogleAppsScript.Forms.FormResponse,
-  props: IFormsDocumentProperties
-) {
-  // Regex to check for {{dynamic properties}}.
-  const rgx = new RegExp(/{{.+}}/);
+  formResponse?: GoogleAppsScript.Forms.FormResponse,
+  props?: IFormsDocumentProperties
+): boolean {
+  if (formResponse === undefined || props === undefined) {
+    return false;
+  }
+
   const hasDynamicProps = Object.keys(props).some((x) => rgx.test(props[x]));
 
   if (hasDynamicProps) {
@@ -300,17 +304,19 @@ function setDynamicProperties(
       }));
 
     Object.keys(props)
-      .map((key) => props[key].toLowerCase())
-      .filter((prop) => rgx.test(prop))
+      .map((key) => ({ key, value: props[key].toLowerCase() }))
+      .filter((prop) => rgx.test(prop.value))
       .forEach((prop) => {
-        const responseToUse = responses.filter(
-          (resp) => prop.indexOf(resp.title.toLowerCase()) !== -1
+        const titleFromProp = prop.value.replace("{{", "").replace("}}", "");
+        const item = responses.filter(
+          (resp) => titleFromProp === resp.title.toLowerCase()
         )[0];
-        if (responseToUse !== undefined) {
-          prop = responseToUse.response;
+        if (item !== undefined) {
+          props[prop.key] = item.response;
         }
       });
   }
+  return true;
 }
 
 /**

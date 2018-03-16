@@ -201,8 +201,8 @@ describe("forms", () => {
   });
 
   describe("onAuthorizationRequired", () => {
-    const expectReturnFalse = (p: any, a: any) => {
-      expect(module.onAuthorizationRequired(a, p)).toBe(false);
+    const expectReturnFalse = (authInfo: any, properties: any) => {
+      expect(module.onAuthorizationRequired(authInfo, properties)).toBe(false);
     };
 
     // Helpers
@@ -212,18 +212,18 @@ describe("forms", () => {
     );
 
     describe("when auth info is undefined", () =>
-      it("should return false", () => expectReturnFalse({}, undefined)));
+      it("should return false", () => expectReturnFalse(undefined, {})));
 
     describe("when properties is undefined", () =>
-      it("should return false", () => expectReturnFalse(undefined, {})));
+      it("should return false", () => expectReturnFalse({}, undefined)));
 
     describe("when last auth date is today", () => {
       it("should return false", () =>
         expectReturnFalse(
+          {},
           {
             getProperty: jest.fn().mockReturnValue(today)
-          },
-          {}
+          }
         ));
     });
 
@@ -330,5 +330,228 @@ describe("forms", () => {
 
       it("should return true", () => expect(result).toBe(true));
     });
+  });
+
+  describe("setDynamicProperties", () => {
+    const expectReturnFalse = (response: any, properties: any) => {
+      expect(module.setDynamicProperties(response, properties)).toBe(false);
+    };
+
+    describe("when response is undefined", () =>
+      it("should return false", () => expectReturnFalse({}, undefined)));
+
+    describe("when properties is undefined", () =>
+      it("should return false", () => expectReturnFalse(undefined, {})));
+
+    describe("when no dynamic properties", () => {
+      // Arrange
+      const response = {} as any;
+      const props: IFormsDocumentProperties = {
+        text1: "value"
+      } as any;
+      const propsCopy = { ...props };
+
+      // Act
+      const result = module.setDynamicProperties(response, props);
+
+      // Assert
+      it("should not modify properties", () =>
+        expect(props.text1).toBe(propsCopy.text1));
+
+      it("should return true", () => expect(result).toBe(true));
+    });
+
+    const setupResponse = (title: string, body: string) => {
+      const item: GoogleAppsScript.Forms.Item = {
+        getTitle: jest.fn().mockReturnValue(title)
+      } as any;
+
+      const itemResponse: GoogleAppsScript.Forms.ItemResponse = {
+        getResponse: jest.fn().mockReturnValue(body),
+        getItem: jest.fn().mockReturnValue(item)
+      } as any;
+
+      const response: GoogleAppsScript.Forms.FormResponse = {
+        getItemResponses: jest.fn().mockReturnValue([itemResponse])
+      } as any;
+      return response;
+    };
+
+    describe("when dyanmic property does not match title", () => {
+      // Arrange
+      const t = "title";
+      const r = "response";
+      const response = setupResponse(t, r);
+
+      const props: IFormsDocumentProperties = {
+        text1: "{{notTitle}}"
+      } as any;
+
+      // Act
+      const result = module.setDynamicProperties(response, props);
+
+      // Assert
+      it("should update property with dynamic value", () =>
+        expect(props.text1).not.toBe(r));
+      it("should return true", () => expect(result).toBe(true));
+    });
+
+    describe("when dyanmic property matches title", () => {
+      // Arrange
+      const t = "title";
+      const r = "response";
+      const response = setupResponse(t, r);
+
+      const props: IFormsDocumentProperties = {
+        text1: "{{title}}"
+      } as any;
+
+      // Act
+      const result = module.setDynamicProperties(response, props);
+
+      // Assert
+      it("should update property with dynamic value", () =>
+        expect(props.text1).toBe(r));
+      it("should return true", () => expect(result).toBe(true));
+    });
+  });
+
+  describe("showSettingsSidebar", () => {
+    let output: GoogleAppsScript.HTML.HtmlOutput;
+    let template: IFormsSettingsTemplate;
+    let props: IFormsDocumentProperties;
+    let documentProperties: GoogleAppsScript.Properties.Properties;
+    let ui: GoogleAppsScript.Base.Ui;
+
+    // Setup the html mock.
+    const setupHtml = () => {
+      output = {
+        setTitle: jest.fn().mockReturnThis()
+      } as any;
+      template = {
+        evaluate: jest.fn().mockReturnValue(output)
+      } as any;
+      global.HtmlService = {
+        createTemplate: jest.fn().mockReturnValue(template)
+      } as any;
+    };
+
+    // Setup the properties mock.
+    const setupProperties = () => {
+      props = {
+        apiKey: "test",
+        apiUrl: undefined
+      } as any;
+      documentProperties = {
+        getProperties: jest.fn().mockReturnValue(props)
+      } as any;
+      global.PropertiesService = {
+        getDocumentProperties: () => documentProperties
+      } as any;
+    };
+
+    // Setup the spreadsheet ui mock.
+    const setupSheetUi = () => {
+      ui = {
+        showSidebar: jest.fn()
+      } as any;
+      global.FormApp = {
+        getUi: () => ui
+      } as any;
+    };
+
+    beforeAll(() => {
+      // Arrange
+      setupHtml();
+      setupProperties();
+      setupSheetUi();
+
+      // Act
+      module.showSettingsSidebar();
+    });
+
+    it("should fetch template from module", () =>
+      expect(global.HtmlService.createTemplate).toBeCalled());
+
+    it("should set the html height", () =>
+      expect(output.setTitle).toBeCalledWith(expect.any(String)));
+
+    it("should use the html to display sidebar", () =>
+      expect(ui.showSidebar).toBeCalledWith(output));
+
+    describe("when property is defined", () =>
+      it("should bind value to template", () =>
+        expect(template.apiKey).toBe(props.apiKey)));
+
+    describe("when property is undefined", () =>
+      it("should bind value to template as empty string", () =>
+        expect(template.apiUrl).toBe("")));
+  });
+
+  describe("showAuthModal", () => {
+    let output: GoogleAppsScript.HTML.HtmlOutput;
+    let template: IAuthTemplate;
+    let authInfo: GoogleAppsScript.Script.AuthorizationInfo;
+    let ui: GoogleAppsScript.Base.Ui;
+    const authUrl = "url";
+
+    // Setup the html mock.
+    const setupHtml = () => {
+      output = {
+        setHeight: jest.fn().mockReturnThis(),
+        setWidth: jest.fn().mockReturnThis()
+      } as any;
+      template = {
+        evaluate: jest.fn().mockReturnValue(output)
+      } as any;
+      global.HtmlService = {
+        createTemplate: jest.fn().mockReturnValue(template)
+      } as any;
+    };
+
+    // Setup the script app mock.
+    const setupScriptApp = () => {
+      authInfo = {
+        getAuthorizationUrl: jest.fn().mockReturnValue(authUrl)
+      } as any;
+      global.ScriptApp = {
+        getAuthorizationInfo: jest.fn().mockReturnValue(authInfo),
+        AuthMode
+      } as any;
+    };
+
+    // Setup the spreadsheet ui mock.
+    const setupSheetUi = () => {
+      ui = {
+        showModalDialog: jest.fn()
+      } as any;
+      global.FormApp = {
+        getUi: () => ui
+      } as any;
+    };
+
+    beforeAll(() => {
+      // Arrange
+      setupHtml();
+      setupScriptApp();
+      setupSheetUi();
+
+      // Act
+      module.showAuthModal();
+    });
+
+    it("should fetch template from module", () =>
+      expect(global.HtmlService.createTemplate).toBeCalled());
+
+    it("should set the html height", () =>
+      expect(output.setHeight).toBeCalled());
+
+    it("should set the html width", () => expect(output.setWidth).toBeCalled());
+
+    it("should use the html to display modal", () =>
+      expect(ui.showModalDialog).toBeCalledWith(output, expect.any(String)));
+
+    it("should bind auth url to template", () =>
+      expect(template.authUrl).toBe(authUrl));
   });
 });
