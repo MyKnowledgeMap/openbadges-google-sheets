@@ -50,10 +50,13 @@ jobs:
           command: npm test -- --ci --testResultsProcessor="jest-junit"
 
       - store_test_results:
-          path: ~/junit
+          path: junit
 
       - store_artifacts:
-          path: ~/junit
+          path: junit
 
       # build
       - run: npm run build
+      
+      - store_artifacts:
+          path: dist
