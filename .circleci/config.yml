@@ -40,7 +40,7 @@ jobs:
           name: "npm run test"
           environment:
             JEST_JUNIT_OUTPUT: reports/jest-results.xml
-          command: npm test -- --ci --testResultsProcessor="jest-junit"
+          command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
 
       # Store the test reports.
       - store_test_results:
