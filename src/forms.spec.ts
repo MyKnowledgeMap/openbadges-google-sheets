@@ -7,6 +7,7 @@ interface IGlobal {
   UrlFetchApp: GoogleAppsScript.URL_Fetch.UrlFetchApp;
   Logger: GoogleAppsScript.Base.Logger;
   ScriptApp: GoogleAppsScript.Script.ScriptApp;
+  Session: GoogleAppsScript.Base.Session;
 }
 declare const global: IGlobal;
 
@@ -187,6 +188,90 @@ describe("forms", () => {
 
         // Assert
         expect(mock).toBeCalled();
+      });
+    });
+  });
+
+  describe("onAuthorizationRequired", () => {
+    describe("when last auth date is today", () => {
+      it("should return false", () => {
+        // Arrange
+        const today = new Date().toDateString();
+        const properties: GoogleAppsScript.Properties.Properties = {
+          getProperty: jest.fn().mockReturnValue(today)
+        } as any;
+
+        // Act
+        const result = module.onAuthorizationRequired({} as any, properties);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe("when last auth date is not today", () => {
+      // Arrange
+      const notToday = ((d: Date) => new Date(d.setDate(d.getDate() - 7)))(
+        new Date()
+      );
+      const properties: GoogleAppsScript.Properties.Properties = {
+        getProperty: jest.fn().mockReturnValue(notToday),
+        setProperty: jest.fn()
+      } as any;
+
+      const html: GoogleAppsScript.HTML.HtmlOutput = {
+        getContent: jest.fn()
+      } as any;
+
+      const template: IAuthTemplate = {
+        evaluate: jest.fn().mockReturnValue(html)
+      } as any;
+
+      global.HtmlService = {
+        createTemplate: jest.fn().mockReturnValue(template)
+      } as any;
+
+      const authUrl = "test";
+      const authInfo: GoogleAppsScript.Script.AuthorizationInfo = {
+        getAuthorizationUrl: jest.fn().mockReturnValue(authUrl)
+      } as any;
+
+      const user: GoogleAppsScript.Base.User = {
+        getEmail: jest.fn()
+      } as any;
+
+      global.Session = {
+        getEffectiveUser: jest.fn().mockReturnValue(user)
+      } as any;
+
+      // Act
+      const result = module.onAuthorizationRequired(authInfo, properties);
+
+      it("should set auth url on template", () => {
+        // Assert
+        expect(template.authUrl).toBe(authUrl);
+      });
+
+      it("should prepare email with user email", () => {
+        // Assert
+        expect(user.getEmail).toBeCalled();
+      });
+
+      it("should prepare email with html content", () => {
+        // Assert
+        expect(html.getContent).toBeCalled();
+      });
+
+      it("should update last auth email date property to today", () => {
+        // Assert
+        const args = (properties.setProperty as jest.Mock).mock.calls[0];
+        expect(args[0]).toBe("lastAuthEmailDate");
+        expect(args[1]).toBe(new Date().toDateString());
+      });
+
+      it("should return true", () => {
+        // Assert
+        expect(result).toBe(true);
       });
     });
   });

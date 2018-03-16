@@ -66,15 +66,15 @@ function createTriggerIfNotExist() {
  * @returns {void}
  */
 function onAuthorizationRequired(
-  authInfo: GoogleAppsScript.Script.AuthorizationInfo
-): void {
-  const properties = PropertiesService.getDocumentProperties();
+  authInfo: GoogleAppsScript.Script.AuthorizationInfo,
+  properties: GoogleAppsScript.Properties.Properties
+): boolean {
   const lastAuthEmailDate = properties.getProperty("lastAuthEmailDate");
   const todayDate = new Date().toDateString();
 
   // Check whether the user has already received an email for reauth today.
   if (lastAuthEmailDate === todayDate) {
-    return;
+    return false;
   }
 
   // Get the template for the reauthorization email.
@@ -85,13 +85,14 @@ function onAuthorizationRequired(
   const html = template.evaluate();
 
   // Send the email with the reauthorization link.
-  const recipient = Session.getEffectiveUser().getEmail();
+  const to = Session.getEffectiveUser().getEmail();
   const subject = "OpenBadges - Authorization is required.";
   const body = html.getContent();
-  sendEmail(recipient, subject, body, "text/html");
+  sendEmail({ to, subject, body, contentType: "text/html" });
 
   // Update the lastAuthEmailDate property.
   properties.setProperty("lastAuthEmailDate", todayDate);
+  return true;
 }
 
 /**
@@ -100,16 +101,17 @@ function onAuthorizationRequired(
  * @returns {void}
  */
 function onFormSubmit(e: IFormSubmitEvent): void {
+  // Get the script properties which should have been configured.
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const props = documentProperties.getProperties() as IFormsDocumentProperties;
+
   // Check whether authorization is required for this trigger event.
   const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
   const authStatus = authInfo.getAuthorizationStatus();
   if (authStatus === ScriptApp.AuthorizationStatus.REQUIRED) {
-    onAuthorizationRequired(authInfo);
+    onAuthorizationRequired(authInfo, documentProperties);
     return;
   }
-
-  // Get the script properties which should have been configured.
-  const props = PropertiesService.getDocumentProperties().getProperties() as IFormsDocumentProperties;
 
   // Stop processing if the properties needed to make a request are not set.
   const requiredProperties = ["apiUrl", "apiToken", "apiKey"];
@@ -132,10 +134,14 @@ function onFormSubmit(e: IFormSubmitEvent): void {
  * @param {FormsUserProperties} props
  */
 function sendToApi(
-  form: GoogleAppsScript.Forms.Form,
-  response: GoogleAppsScript.Forms.FormResponse,
-  props: IFormsDocumentProperties
+  form?: GoogleAppsScript.Forms.Form,
+  response?: GoogleAppsScript.Forms.FormResponse,
+  props?: IFormsDocumentProperties
 ): void {
+  if (form === undefined || response === undefined || props === undefined) {
+    return;
+  }
+
   // Build the request header.
   const headers = {
     Authorization: `Bearer ${props.apiToken}`,
@@ -178,11 +184,11 @@ function sendToApi(
 
     if (retry === 2) {
       Logger.log("Request %s failed. Sending email to Form owner...", retry);
-      const recipient = Session.getEffectiveUser().getEmail();
+      const to = Session.getEffectiveUser().getEmail();
       const subject =
         "OpenBadges - An error occurred after form was submitted.";
       const body = result.getContentText();
-      sendEmail(recipient, subject, body, "text/plain");
+      sendEmail({ to, subject, body, contentType: "text/plain" });
     } else {
       Logger.log("Request %s failed. Retrying...", retry);
       Utilities.sleep(500);
@@ -193,21 +199,38 @@ function sendToApi(
 /**
  * Send an email using the SendGrid API.
  * https://sendgrid.com/docs/API_Reference/api_v3.html
- * @param {string} to the email address the email should be sent to.
- * @param {string} subject the subject of the email.
- * @param {string} body the body of the email.
- * @param {string} contentType the content type of the email body.
+ * @param {{
+ *   to?: string;
+ *   subject?: string;
+ *   body?: string;
+ *   contentType?: string;
+ * }} {
+ *   to,
+ *   subject,
+ *   body,
+ *   contentType
+ * }
+ * @returns {void}
  */
-function sendEmail(
-  to: string,
-  subject: string,
-  body: string,
-  contentType: string
-): void {
-  // Create the header with the api key.
-  const headers = {
-    Authorization: `Bearer ${process.env.SENDGRID_KEY!}`
-  };
+function sendEmail({
+  to,
+  subject,
+  body,
+  contentType
+}: {
+  to?: string;
+  subject?: string;
+  body?: string;
+  contentType?: string;
+}): void {
+  if (
+    to === undefined ||
+    subject === undefined ||
+    body === undefined ||
+    contentType === undefined
+  ) {
+    return;
+  }
 
   // Create the request payload.
   const payload = {
@@ -230,6 +253,11 @@ function sendEmail(
         value: body
       }
     ]
+  };
+
+  // Create the header with the api key.
+  const headers = {
+    Authorization: `Bearer ${process.env.SENDGRID_KEY!}`
   };
 
   // Create the URL request options.
