@@ -10,6 +10,6 @@ module.exports = {
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   moduleNameMapper: {
-    "^.+\\.html$": "<rootDir>/src/helpers/html.mock.js"
+    "^.+\\.html$": "<rootDir>/src/helpers/html.mock.ts"
   }
 };
