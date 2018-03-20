@@ -82,25 +82,32 @@ function onRun(): boolean {
   // Populate the payloads with static data from the properties.
   populateStaticPayloads(props, payloads);
 
-  // Filter the payloads and see if we're using verified and issued,
-  // if so remove events which should not be issued yet.
-  payloads = payloads.filter((x) => {
-    // If not using verified and issued, ignore this filter.
-    if (!x.verified && !x.issued) {
-      return true;
-    }
-    // If using verified, it must be verified.
-    if (x.verified.toUpperCase() !== "Y") {
-      return false;
-    }
-    // If using issued, it must not already be issued.
-    return x.issued.toUpperCase() !== "Y";
-  });
-
-  // Update the issued column using the payloads object.
   const dynamicColumns = getDynamicColumns(props);
-  dynamicColumns.filter((x) => x.key === "issued").forEach((x) => {
-    const issuedRange = sheet.getRange(2, x.column, numberOfRows - 1);
+  const issuedColumn = dynamicColumns.filter((x) => x.key === "issued")[0];
+  if (issuedColumn !== undefined) {
+    // Filter the payloads and see if we're using verified and issued,
+    // if so remove events which should not be issued yet.
+    payloads = payloads.filter((x) => {
+      // If using verified, it must be verified.
+      if (x.verified.toUpperCase() !== "Y") {
+        return false;
+      }
+
+      // Empty issued values have not been issued.
+      if (!x.issued) {
+        return true;
+      }
+
+      // Issued values must not already be issued.
+      return x.issued.toUpperCase() !== "Y";
+    });
+
+    // Update the issued column using the payloads object.
+    const issuedRange = sheet.getRange(
+      2,
+      issuedColumn.column,
+      numberOfRows - 1
+    );
     const values = issuedRange.getValues() as IGetValuesResult;
     for (let i = 0; i < numberOfRows - 1; i++) {
       const wasIssued = payloads.filter((y) => y.rowIndex === i)[0];
@@ -109,7 +116,7 @@ function onRun(): boolean {
       }
     }
     issuedRange.setValues(values);
-  });
+  }
 
   // Build the request headers.
   const headers = {
