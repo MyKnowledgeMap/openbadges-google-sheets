@@ -32,4 +32,6 @@ interface ISheetsDocumentProperties {
   userId: string;
   firstName: string;
   lastName: string;
+  verified: string;
+  issued: string;
 }

@@ -9,6 +9,31 @@ const apiRgx = new RegExp(/(api)(\S+)/);
  * Adds the OpenBadges menu to the toolbar
  */
 function onOpen(): void {
+  // Default the properties so the user
+  // will always be able to open the settings menu.
+  const documentProperties = PropertiesService.getDocumentProperties();
+  let props = documentProperties.getProperties();
+  if (Object.keys(props).length === 0) {
+    props = {
+      apiKey: "",
+      apiUrl: "",
+      apiToken: "",
+      activityId: "",
+      text1: "",
+      int1: "",
+      int2: "",
+      date1: "",
+      activityTime: "",
+      userId: "",
+      firstName: "",
+      lastName: "",
+      verified: "",
+      issued: ""
+    };
+    documentProperties.setProperties(props);
+  }
+
+  // Add the options to the menu.
   const menus = [
     { name: "Settings", functionName: "showSettingsSidebar" },
     { name: "Run", functionName: "onRun" }
@@ -40,19 +65,51 @@ function onSaveConfiguration(props: ISheetsDocumentProperties): void {
 function onRun(): boolean {
   // Get the current sheet and get total the number of rows.
   const sheet = SpreadsheetApp.getActiveSheet();
-  const lastRow = sheet.getLastRow();
+  const numberOfRows = sheet.getLastRow();
 
   // Create the payloads object and initilize row.
-  const payloads: ICreateActivityEvent[] = [];
-  for (let i = 0; i < lastRow - 1; i++) {
+  let payloads: ICreateActivityEvent[] = [];
+  for (let i = 0; i < numberOfRows - 1; i++) {
     payloads[i] = {} as ICreateActivityEvent;
   }
 
   // Get the document properties.
   const props = PropertiesService.getDocumentProperties().getProperties() as ISheetsDocumentProperties;
 
+  // Populate the payloads with dynamic data from the sheet.
   populateDynamicPayloads(props, payloads, sheet);
+
+  // Populate the payloads with static data from the properties.
   populateStaticPayloads(props, payloads);
+
+  // Filter the payloads and see if we're using verified and issued,
+  // if so remove events which should not be issued yet.
+  payloads = payloads.filter((x) => {
+    // If not using verified and issued, ignore this filter.
+    if (x.verified === undefined && x.issued === undefined) {
+      return true;
+    }
+    // If using verified, it must be verified.
+    if (x.verified.toUpperCase() !== "Y") {
+      return false;
+    }
+    // If using issued, it must not already be issued.
+    return x.issued.toUpperCase() !== "Y";
+  });
+
+  // Update the issued column using the payloads object.
+  const dynamicColumns = getDynamicColumns(props);
+  dynamicColumns.filter((x) => x.key === "issued").forEach((x) => {
+    const issuedRange = sheet.getRange(2, x.column, numberOfRows - 1);
+    const values = issuedRange.getValues() as IGetValuesResult;
+    for (let i = 0; i < numberOfRows - 1; i++) {
+      const wasIssued = payloads.filter((y) => y.rowIndex === i)[0];
+      if (wasIssued !== undefined) {
+        values[i] = ["Y"];
+      }
+    }
+    issuedRange.setValues(values);
+  });
 
   // Build the request headers.
   const headers = {
@@ -76,52 +133,92 @@ function onRun(): boolean {
   const responseCode = response.getResponseCode();
 
   if (responseCode === 200) {
+    SpreadsheetApp.getUi().alert(`Sent ${payloads.length} events`);
     return true;
   }
   Logger.log(response.getContentText());
   return false;
 }
 
+/**
+ * Converts letters to a number.
+ * https://stackoverflow.com/a/29040784/6387935 🙌
+ * @param {string} letter
+ * @returns {number}
+ */
+function convertLetterToNumber(letter: string): number {
+  let out = 0;
+  const len = letter.length;
+  for (let pos = 0; pos < len; pos++) {
+    out += (letter.charCodeAt(pos) - 64) * Math.pow(26, len - pos - 1);
+  }
+  return out;
+}
+
+/**
+ * Gets the columns which have been set as dynamic from properties.
+ * @param {ISheetsDocumentProperties} props
+ */
+function getDynamicColumns(props: ISheetsDocumentProperties) {
+  return Object.keys(props)
+    .filter((key) => dynamicPropRgx.test(props[key]))
+    .map((key) => ({
+      key,
+      value: props[key]
+        .toUpperCase()
+        .replace("{{", "")
+        .replace("}}", "")
+    }))
+    .map((prop) => ({
+      key: prop.key,
+      value: prop.value,
+      column: convertLetterToNumber(prop.value)
+    }));
+}
+
+/**
+ * Populate the payloads with dynamic data from the sheet.
+ * @param {ISheetsDocumentProperties} props
+ * @param {ICreateActivityEvent[]} payloads
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
+ */
 function populateDynamicPayloads(
   props: ISheetsDocumentProperties,
   payloads: ICreateActivityEvent[],
   sheet: GoogleAppsScript.Spreadsheet.Sheet
 ) {
-  const lastRow = sheet.getLastRow();
-  // Find columns which we need to use the dynamic value for.
-  Object.keys(props)
-    .filter((key) => dynamicPropRgx.test(props[key]))
-    .map((key) => ({
-      key,
-      value: props[key]
-        .toLowerCase()
-        .replace("{{", "")
-        .replace("}}", "")
-    }))
-    // Loop through the dynamic columns and get all values for the column
-    // and assign each value to their corresponding payload.
-    .forEach((column) => {
-      // Create the query for the current column using A1 notation.
-      const query = `${column.value}2:${column.value}${lastRow}`;
+  const numberOfRows = sheet.getLastRow();
+  const numberOfColumns = sheet.getLastColumn();
+  // const query = `A2:${lastColumn}${lastRow}`;
+  const range = sheet.getRange(2, 1, numberOfRows - 1, numberOfColumns);
+  const rows = range.getValues() as IGetValuesResult;
 
-      // Get all values for this column using the query.
-      const values = (sheet.getRange(query).getValues() as IGetValuesResult)
-        // GetValues returns an Object[row][column] and we only care about the first
-        // column so project to the column.
-        .map((value) => value[0]);
+  const dynamicColumns = getDynamicColumns(props);
 
-      values.forEach((value, rowIndex) => {
-        // Dates have to be handled differently since toString() will
-        // produce a value that the service cannot parse.
-        if (value instanceof Date) {
-          payloads[rowIndex][column.key] = value.toUTCString();
+  rows.forEach((row, rowIndex) => {
+    const model = {} as ICreateActivityEvent;
+    row.forEach((cell, cellIndex) => {
+      const column = dynamicColumns.filter(
+        (x) => x.column - 1 === cellIndex
+      )[0];
+      if (column !== undefined) {
+        if (cell instanceof Date) {
+          model[column.key] = cell.toUTCString();
         } else {
-          payloads[rowIndex][column.key] = value.toString();
+          model[column.key] = cell.toString();
         }
-      });
+      }
     });
+    model.rowIndex = rowIndex;
+    payloads[rowIndex] = model;
+  });
 }
 
+/**
+ * Populate the payloads with static data from the properties.
+ * @param {ISheetsDocumentProperties} props
+ * @param {ICreateActivityEvent[]} payloads
+ */
 function populateStaticPayloads(
   props: ISheetsDocumentProperties,
   payloads: ICreateActivityEvent[]
