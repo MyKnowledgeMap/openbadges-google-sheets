@@ -1,5 +1,5 @@
 {
-  "name": "gas.openbadges.me",
+  "name": "@myknowledgemap/openbadges-google-apps-script",
   "version": "1.0.0",
   "description": "Google App Scripts for OpenBadges.me",
   "scripts": {
