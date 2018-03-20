@@ -34,6 +34,8 @@ interface ISheetsSettingsTemplate extends GoogleAppsScript.HTML.HtmlTemplate {
   userId: string;
   firstName: string;
   lastName: string;
+  verified: string;
+  issued: string;
 }
 
 /**

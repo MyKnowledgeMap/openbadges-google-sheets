@@ -24,6 +24,15 @@ describe("sheets", () => {
         addMenu: jest.fn()
       } as any;
 
+      const props: ISheetsDocumentProperties = {} as any;
+      const documentProperties: GoogleAppsScript.Properties.Properties = {
+        getProperties: jest.fn().mockReturnValue(props),
+        setProperties: jest.fn()
+      } as any;
+      global.PropertiesService = {
+        getDocumentProperties: () => documentProperties
+      } as any;
+
       global.SpreadsheetApp = {
         getActiveSpreadsheet: jest.fn().mockReturnValue(spreadsheet)
       } as any;
@@ -136,11 +145,17 @@ describe("sheets", () => {
   describe("onRun", () => {
     // Setup the spreadsheet mock.
     const setupSpreadsheet = () => {
+      const range: GoogleAppsScript.Spreadsheet.Range = {
+        getValues: jest.fn().mockReturnValue([[]])
+      } as any;
       const sheet: GoogleAppsScript.Spreadsheet.Sheet = {
-        getLastRow: jest.fn().mockReturnValue(10)
+        getLastRow: jest.fn().mockReturnValue(10),
+        getLastColumn: jest.fn().mockReturnValue(10),
+        getRange: jest.fn().mockReturnValue(range)
       } as any;
       global.SpreadsheetApp = {
-        getActiveSheet: () => sheet
+        getActiveSheet: () => sheet,
+        getUi: () => ({ alert: jest.fn() })
       } as any;
     };
 
@@ -258,9 +273,14 @@ describe("sheets", () => {
 
         const payloads = [{}] as ICreateActivityEvent[];
 
+        const range: GoogleAppsScript.Spreadsheet.Range = {
+          getValues: jest.fn().mockReturnValue([[]])
+        } as any;
         const sheet = {
-          getLastRow: () => 2
-        } as GoogleAppsScript.Spreadsheet.Sheet;
+          getLastRow: () => 2,
+          getLastColumn: () => 2,
+          getRange: () => range
+        } as any;
 
         // Act
         module.populateDynamicPayloads(props, payloads, sheet);
@@ -284,13 +304,14 @@ describe("sheets", () => {
         };
         sheet = {
           getLastRow: () => 2,
+          getLastColumn: () => 2,
           getRange: jest.fn().mockReturnValue(range)
         } as any;
       };
 
       beforeAll(() => {
         props = {
-          text1: "{{B}}"
+          text1: "{{A}}"
         } as any;
         payloads = [{}] as any;
       });

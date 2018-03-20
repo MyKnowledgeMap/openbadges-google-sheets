@@ -168,7 +168,7 @@ function sendToApi(
     date1: props.date1,
     firstName: "",
     lastName: ""
-  };
+  } as any;
 
   // Use the request headers and payload to create the request params.
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
