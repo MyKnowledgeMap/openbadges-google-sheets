@@ -1,6 +1,6 @@
-# Google Apps Script - OpenBadges.me [![CircleCI](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master.svg?style=svg)](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/GAS.OpenBadges.me/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/GAS.OpenBadges.me?branch=coveralls)
+# OpenBadges.me Google Apps Script  [![CircleCI](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master.svg?style=svg)](https://circleci.com/gh/harrymitchinson/GAS.OpenBadges.me/tree/master) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/GAS.OpenBadges.me/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/GAS.OpenBadges.me?branch=coveralls)
 
-Google Apps Script for OpenBadges.me containing Google Forms and Google Sheets add-ons.
+Google Apps Scripts for OpenBadges.me containing Google Forms and Google Sheets add-ons.
 
 **Google Forms add-on** - Create activity events when a form is completed and automatically issue badges to the user who created the response.
 
