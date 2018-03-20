@@ -24,7 +24,7 @@ describe("sheets", () => {
         addMenu: jest.fn()
       } as any;
 
-      const props: ISheetsDocumentProperties = {} as any;
+      const props: ISheetsDocumentProperties = { key: "value" } as any;
       const documentProperties: GoogleAppsScript.Properties.Properties = {
         getProperties: jest.fn().mockReturnValue(props),
         setProperties: jest.fn()
@@ -44,9 +44,37 @@ describe("sheets", () => {
       expect(spreadsheet.addMenu).toBeCalled();
     };
 
-    it("onInstall should add menu", () => expectMenu(module.onInstall));
+    const expectProps = (fnUnderTest: () => void) => {
+      // Arrange
+      const spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet = {
+        addMenu: jest.fn()
+      } as any;
 
+      const props: ISheetsDocumentProperties = {} as any;
+      const documentProperties: GoogleAppsScript.Properties.Properties = {
+        getProperties: jest.fn().mockReturnValue(props),
+        setProperties: jest.fn()
+      } as any;
+      global.PropertiesService = {
+        getDocumentProperties: () => documentProperties
+      } as any;
+
+      global.SpreadsheetApp = {
+        getActiveSpreadsheet: jest.fn().mockReturnValue(spreadsheet)
+      } as any;
+
+      // Act
+      fnUnderTest();
+
+      // Assert
+      expect(documentProperties.setProperties).toBeCalled();
+    };
+
+    it("onInstall should add menu", () => expectMenu(module.onInstall));
+    it("onInstall should set default props", () =>
+      expectProps(module.onInstall));
     it("onOpen should add menu", () => expectMenu(module.onOpen));
+    it("onOpen should set default props", () => expectProps(module.onOpen));
   });
 
   describe("onSaveConfiguration", () => {
@@ -143,10 +171,12 @@ describe("sheets", () => {
   });
 
   describe("onRun", () => {
+    let range: GoogleAppsScript.Spreadsheet.Range;
     // Setup the spreadsheet mock.
-    const setupSpreadsheet = () => {
-      const range: GoogleAppsScript.Spreadsheet.Range = {
-        getValues: jest.fn().mockReturnValue([[]])
+    const setupSpreadsheet = (values: any[]) => {
+      range = {
+        getValues: jest.fn().mockReturnValue([values]),
+        setValues: jest.fn()
       } as any;
       const sheet: GoogleAppsScript.Spreadsheet.Sheet = {
         getLastRow: jest.fn().mockReturnValue(10),
@@ -160,8 +190,7 @@ describe("sheets", () => {
     };
 
     // Setup the properties mock.
-    const setupProperties = () => {
-      const props: ISheetsDocumentProperties = {} as any;
+    const setupProperties = (props: any) => {
       const documentProperties: GoogleAppsScript.Properties.Properties = {
         getProperties: jest.fn().mockReturnValue(props)
       } as any;
@@ -181,14 +210,40 @@ describe("sheets", () => {
       } as any;
     };
 
-    beforeAll(() => {
-      setupSpreadsheet();
-      setupProperties();
+    describe("when verified and issued are used", () => {
+      describe("when is verified and not issued", () => {
+        it("should update issued column", () => {
+          // Arrange
+          const values = ["Y", "N"];
+          setupSpreadsheet(values);
+          setupProperties({ verified: "{{A}}", issued: "{{B}}" });
+          setupUrlFetch(200);
+          // Act
+          module.onRun();
+          // Assert
+          expect(range.setValues).not.toBeCalledWith([values]);
+        });
+      });
+      describe("when is verified and issued", () => {
+        it("should not update issued column", () => {
+          // Arrange
+          const values = ["Y", "Y"];
+          setupSpreadsheet(values);
+          setupProperties({ verified: "{{A}}", issued: "{{B}}" });
+          setupUrlFetch(200);
+          // Act
+          module.onRun();
+          // Assert
+          expect(range.setValues).toBeCalledWith([values]);
+        });
+      });
     });
 
     describe("when request is successful", () => {
       it("should return true", () => {
         // Arrange
+        setupSpreadsheet([]);
+        setupProperties({});
         setupUrlFetch(200);
         // Act
         const result = module.onRun();
@@ -200,6 +255,8 @@ describe("sheets", () => {
     describe("when request is not successful", () => {
       it("should return false", () => {
         // Arrange
+        setupSpreadsheet([]);
+        setupProperties({});
         setupUrlFetch(500);
         // Act
         const result = module.onRun();
@@ -290,7 +347,45 @@ describe("sheets", () => {
       });
     });
 
-    describe("when value using template", () => {
+    describe("when value using template with no matching column", () => {
+      let value: number | string | boolean | Date;
+      let payloads: ICreateActivityEvent[];
+      let props: ISheetsDocumentProperties;
+      let sheet: GoogleAppsScript.Spreadsheet.Sheet;
+
+      // Setup the sheet mock with the provided value.
+      const setupSheet = (v: number | string | boolean | Date) => {
+        value = v;
+        const range = {
+          getValues: jest.fn().mockReturnValue([[value]])
+        };
+        sheet = {
+          getLastRow: () => 2,
+          getLastColumn: () => 2,
+          getRange: jest.fn().mockReturnValue(range)
+        } as any;
+      };
+
+      beforeAll(() => {
+        props = {
+          text1: "{{B}}"
+        } as any;
+        payloads = [{}] as any;
+      });
+
+      it("should ignore dynamic value", () => {
+        // Arrange
+        setupSheet("test");
+
+        // Act
+        module.populateDynamicPayloads(props, payloads, sheet);
+
+        // Assert
+        expect(payloads[0].text1).not.toBe(value.toString());
+      });
+    });
+
+    describe("when value using template with matching column", () => {
       let value: number | string | boolean | Date;
       let payloads: ICreateActivityEvent[];
       let props: ISheetsDocumentProperties;

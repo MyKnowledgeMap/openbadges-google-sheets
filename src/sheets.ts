@@ -9,28 +9,31 @@ const apiRgx = new RegExp(/(api)(\S+)/);
  * Adds the OpenBadges menu to the toolbar
  */
 function onOpen(): void {
+  // Default the properties so the user
+  // will always be able to open the settings menu.
   const documentProperties = PropertiesService.getDocumentProperties();
   let props = documentProperties.getProperties();
   if (Object.keys(props).length === 0) {
     props = {
-      apiKey: undefined,
-      apiUrl: undefined,
-      apiToken: undefined,
-      activityId: undefined,
-      text1: undefined,
-      int1: undefined,
-      int2: undefined,
-      date1: undefined,
-      activityTime: undefined,
-      userId: undefined,
-      firstName: undefined,
-      lastName: undefined,
-      verified: undefined,
-      issued: undefined
+      apiKey: "",
+      apiUrl: "",
+      apiToken: "",
+      activityId: "",
+      text1: "",
+      int1: "",
+      int2: "",
+      date1: "",
+      activityTime: "",
+      userId: "",
+      firstName: "",
+      lastName: "",
+      verified: "",
+      issued: ""
     };
     documentProperties.setProperties(props);
   }
 
+  // Add the options to the menu.
   const menus = [
     { name: "Settings", functionName: "showSettingsSidebar" },
     { name: "Run", functionName: "onRun" }
@@ -73,9 +76,14 @@ function onRun(): boolean {
   // Get the document properties.
   const props = PropertiesService.getDocumentProperties().getProperties() as ISheetsDocumentProperties;
 
+  // Populate the payloads with dynamic data from the sheet.
   populateDynamicPayloads(props, payloads, sheet);
+
+  // Populate the payloads with static data from the properties.
   populateStaticPayloads(props, payloads);
 
+  // Filter the payloads and see if we're using verified and issued,
+  // if so remove events which should not be issued yet.
   payloads = payloads.filter((x) => {
     // If not using verified and issued, ignore this filter.
     if (x.verified === undefined && x.issued === undefined) {
@@ -89,6 +97,7 @@ function onRun(): boolean {
     return x.issued.toUpperCase() !== "Y";
   });
 
+  // Update the issued column using the payloads object.
   const dynamicColumns = getDynamicColumns(props);
   dynamicColumns.filter((x) => x.key === "issued").forEach((x) => {
     const issuedRange = sheet.getRange(2, x.column, numberOfRows - 1);
@@ -131,6 +140,12 @@ function onRun(): boolean {
   return false;
 }
 
+/**
+ * Converts letters to a number.
+ * https://stackoverflow.com/a/29040784/6387935 🙌
+ * @param {string} letter
+ * @returns {number}
+ */
 function convertLetterToNumber(letter: string): number {
   let out = 0;
   const len = letter.length;
@@ -140,6 +155,10 @@ function convertLetterToNumber(letter: string): number {
   return out;
 }
 
+/**
+ * Gets the columns which have been set as dynamic from properties.
+ * @param {ISheetsDocumentProperties} props
+ */
 function getDynamicColumns(props: ISheetsDocumentProperties) {
   return Object.keys(props)
     .filter((key) => dynamicPropRgx.test(props[key]))
@@ -157,6 +176,12 @@ function getDynamicColumns(props: ISheetsDocumentProperties) {
     }));
 }
 
+/**
+ * Populate the payloads with dynamic data from the sheet.
+ * @param {ISheetsDocumentProperties} props
+ * @param {ICreateActivityEvent[]} payloads
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
+ */
 function populateDynamicPayloads(
   props: ISheetsDocumentProperties,
   payloads: ICreateActivityEvent[],
@@ -189,6 +214,11 @@ function populateDynamicPayloads(
   });
 }
 
+/**
+ * Populate the payloads with static data from the properties.
+ * @param {ISheetsDocumentProperties} props
+ * @param {ICreateActivityEvent[]} payloads
+ */
 function populateStaticPayloads(
   props: ISheetsDocumentProperties,
   payloads: ICreateActivityEvent[]
