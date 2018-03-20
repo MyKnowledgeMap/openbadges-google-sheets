@@ -86,7 +86,7 @@ function onRun(): boolean {
   // if so remove events which should not be issued yet.
   payloads = payloads.filter((x) => {
     // If not using verified and issued, ignore this filter.
-    if (x.verified === undefined && x.issued === undefined) {
+    if (!x.verified && !x.issued) {
       return true;
     }
     // If using verified, it must be verified.
