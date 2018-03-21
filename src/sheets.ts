@@ -85,8 +85,7 @@ function onRun(): boolean {
   const dynamicColumns = getDynamicColumns(props);
   const issuedColumn = dynamicColumns.filter((x) => x.key === "issued")[0];
   if (issuedColumn !== undefined) {
-    // Filter the payloads and see if we're using verified and issued,
-    // if so remove events which should not be issued yet.
+    // Filter the payloads and remove events which should not be issued yet.
     payloads = payloads.filter((x) => {
       // If using verified, it must be verified.
       if (x.verified.toUpperCase() !== "Y") {
@@ -140,7 +139,7 @@ function onRun(): boolean {
   const responseCode = response.getResponseCode();
 
   if (responseCode === 200) {
-    SpreadsheetApp.getUi().alert(`Sent ${payloads.length} events`);
+    SpreadsheetApp.getUi().alert(`Sent ${payloads.length} event(s)`);
     return true;
   }
   Logger.log(response.getContentText());
@@ -196,10 +195,8 @@ function populateDynamicPayloads(
 ) {
   const numberOfRows = sheet.getLastRow();
   const numberOfColumns = sheet.getLastColumn();
-  // const query = `A2:${lastColumn}${lastRow}`;
   const range = sheet.getRange(2, 1, numberOfRows - 1, numberOfColumns);
   const rows = range.getValues() as IGetValuesResult;
-
   const dynamicColumns = getDynamicColumns(props);
 
   rows.forEach((row, rowIndex) => {
