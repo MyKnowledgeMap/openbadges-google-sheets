@@ -12,8 +12,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-npm-deps-{{ checksum "package.json" }}
-          - v1-npm-deps-
+          - v1-dependencies-{{ checksum "package.json" }}
+          - v1-dependencies-
       - run: npm install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
@@ -32,23 +32,23 @@ jobs:
       - store_artifacts:
           path: dist
     
-    test:
-      environment:
-        JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
-      docker:
-        - image: circleci/node:8.9.4
-      steps:
-        - checkout
-        - restore_cache:
-            key: v1-dependencies-{{ checksum "package.json" }}
-        - run: npm install
-        - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
-        - run: npm run lint:ci
-        - run: npm run test:ci
-        - store_test_results:
+  test:
+    environment:
+      JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
+    docker:
+      - image: circleci/node:8.9.4
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - run: npm install
+      - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
+      - run: npm run lint:ci
+      - run: npm run test:ci
+      - store_test_results:
           path: reports
-        - store_artifacts:
-            path: reports
+      - store_artifacts:
+          path: reports
 
 workflows:
   version: 2
