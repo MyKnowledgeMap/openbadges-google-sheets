@@ -1,6 +1,6 @@
-# OpenBadges.me Google Apps Script  [![CircleCI](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script.svg?style=svg)](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-apps-script/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-apps-script?branch=coveralls)
+# OpenBadges.me Google Apps Script
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/harrymitchinson/openbadges-google-apps-script.svg)](https://greenkeeper.io/)
+[![CircleCI](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script.svg?style=svg)](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-apps-script/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-apps-script?branch=coveralls) [![Greenkeeper badge](https://badges.greenkeeper.io/harrymitchinson/openbadges-google-apps-script.svg)](https://greenkeeper.io/)
 
 Google Apps Scripts for OpenBadges.me containing Google Forms and Google Sheets add-ons.
 
