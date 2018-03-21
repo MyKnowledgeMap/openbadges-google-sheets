@@ -1,46 +1,40 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
+defaults: &defaults
+  docker:
+    - image: circleci/node:8.9.4
+
 version: 2
 jobs:
-
-  install-dependencies:
-    docker:
-      - image: circleci/node:8.9.4
+  install_dependencies:
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          - v1-dependencies-
+          key: v1-deps-
       - run: npm install
       - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: v1-deps-{{ .BuildNum }}
           paths:
           - node_modules
-      
+
   build:
-    docker:
-      - image: circleci/node:8.9.4
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: v1-deps-{{ .BuildNum }}
       - run: npm install
       - run: npm run build
       - store_artifacts:
           path: dist
-    
+
   test:
+    <<: *defaults
     environment:
       JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
-    docker:
-      - image: circleci/node:8.9.4
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: v1-deps-{{ .BuildNum }}
       - run: npm install
       - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
       - run: npm run lint:ci
@@ -52,12 +46,12 @@ jobs:
 
 workflows:
   version: 2
-  build-and-test:
+  build_and_test:
     jobs:
-      - install-dependencies
+      - install_dependencies
       - build:
           requires:
-            - install-dependencies
+            - install_dependencies
       - test:
           requires:
-            - install-dependencies
+            - install_dependencies
