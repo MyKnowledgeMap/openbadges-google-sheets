@@ -50,8 +50,8 @@ workflows:
     jobs:
       - install_dependencies
       - test:
-        requires:
-          - install_dependencies
+          requires:
+            - install_dependencies
       - build:
           requires:
             - test
