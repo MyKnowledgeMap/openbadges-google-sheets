@@ -29,12 +29,12 @@ jobs:
       
       # Create the reports folder
       - run:
-          name: "Prepare"
+          name: "Create /reports folder"
           command: mkdir reports
       
       - run:
           name: "Run linter"
-          command: npm run lint -- --out reports/tslint-results.xml --format junit
+          command: npm run lint:ci
 
       # Build the app.
       - run: 
@@ -44,7 +44,7 @@ jobs:
       # Test the app.
       - run: 
           name: "Run tests"
-          command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
+          command: npm run test:ci
           
       # Store the test reports.
       - store_test_results:
