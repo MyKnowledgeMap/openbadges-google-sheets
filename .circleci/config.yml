@@ -44,8 +44,10 @@ jobs:
 
       # Store the test reports.
       - store_test_results:
-          path: reports/
-          
+          path: reports
+      - store_artifacts:
+            path: reports
+
       # Store the build artifacts.
       - store_artifacts:
           path: dist
