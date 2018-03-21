@@ -12,7 +12,7 @@ jobs:
           key: v1-deps-
       - run: npm install
       - save_cache:
-          key: v1-deps-{{ .BuildNum }}
+          key: v1-deps-{{ .Revision }}
           paths:
           - node_modules
 
@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-deps-{{ .BuildNum }}
+          key: v1-deps-{{ .Revision }}
       - run: npm install
       - run: npm run build
       - store_artifacts:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-deps-{{ .BuildNum }}
+          key: v1-deps-{{ .Revision }}
       - run: npm install
       - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
       - run: npm run lint:ci
@@ -49,9 +49,10 @@ workflows:
   build_and_test:
     jobs:
       - install_dependencies
+      - test:
+        requires:
+          - install_dependencies
       - build:
           requires:
-            - install_dependencies
-      - test:
-          requires:
-            - install_dependencies
+            - test
+      
