@@ -33,13 +33,13 @@ jobs:
       # Run tslint on the project.
       - run:
           name: "npm run lint"
-          command: npm run lint -- --out reports/tslint-results.xml --format junit
+          command: npm run lint -- --out reports/tslint/tslint-results.xml --format junit
 
       # Run the test suite.
       - run:
           name: "npm run test"
           environment:
-            JEST_JUNIT_OUTPUT: reports/jest-results.xml
+            JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
           command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
 
       # Store the test reports.
@@ -49,3 +49,4 @@ jobs:
       # Store the build artifacts.
       - store_artifacts:
           path: dist
+      
