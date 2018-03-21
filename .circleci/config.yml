@@ -8,6 +8,8 @@ jobs:
     docker:
       - image: circleci/node:8.9.4
     working_directory: ~/openbadges-google-apps-script
+    environment:
+      JEST_JUNIT_OUTPUT: "reports/jest-results.xml"
     steps:
       # Checkout the source code.
       - checkout
@@ -43,8 +45,6 @@ jobs:
       - run: 
           name: "Run tests"
           command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
-          environment:
-            JEST_JUNIT_OUTPUT: "reports/jest-results.xml"
           
       # Store the test reports.
       - store_test_results:
