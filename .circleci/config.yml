@@ -17,12 +17,23 @@ jobs:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           - v1-dependencies-
-      - run: npm install
+      - run: 
+          name: "Install dependencies"
+          command: npm install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
       
+      # Create the reports folder
+      - run:
+          name: "Prepare"
+          command: mkdir reports
+      
+      - run:
+          name: "Run linter"
+          command: npm run lint -- --out reports/tslint-results.xml --format junit
+
       # Build the app.
       - run: 
           name: "Build"
@@ -30,11 +41,11 @@ jobs:
       
       # Test the app.
       - run: 
-          name: "Test"
+          name: "Run tests"
+          command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
           environment:
-            JEST_JUNIT_OUTPUT: reports/jest-results.xml
-          command: mkdir reports && npm run lint -- --out reports/tslint-results.xml --format junit && npm run test:ci -- --ci --testResultsProcessor="jest-junit"
-
+            JEST_JUNIT_OUTPUT: "reports/jest-results.xml"
+          
       # Store the test reports.
       - store_test_results:
           path: reports
