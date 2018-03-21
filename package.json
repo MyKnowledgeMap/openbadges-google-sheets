@@ -11,7 +11,7 @@
       "./node_modules/.bin/jest --collectCoverage --ci --testResultsProcessor=jest-junit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "./node_modules/.bin/tslint --project \".\"",
     "lint:ci":
-      "./node_modules/.bin/tslint --project \".\" --out reports/tslint-results.xml --format junit"
+      "./node_modules/.bin/tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit"
   },
   "author": "Harry Mitchinson",
   "license": "ISC",

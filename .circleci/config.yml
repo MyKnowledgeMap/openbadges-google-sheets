@@ -9,7 +9,7 @@ jobs:
       - image: circleci/node:8.9.4
     working_directory: ~/openbadges-google-apps-script
     environment:
-      JEST_JUNIT_OUTPUT: reports/jest-results.xml
+      JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
     steps:
       # Checkout the source code.
       - checkout
@@ -29,8 +29,8 @@ jobs:
       
       # Create the reports folder
       - run:
-          name: "Create /reports folder"
-          command: mkdir reports
+          name: "Prepare /reports folder"
+          command: mkdir reports && mkdir reports/jest && mkdir reports/tslint
       
       - run:
           name: "Run linter"
