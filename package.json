@@ -4,11 +4,14 @@
   "description": "Integrations for Google Sheets & Forms with OpenBadges.me",
   "scripts": {
     "precommit": "lint-staged",
-    "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
-    "test": "jest --collectCoverage",
+    "build":
+      "./node_modules/.bin/tsc && babel src --out-dir dist --extensions \".ts\"",
+    "test": "./node_modules/.bin/jest",
     "test:ci":
-      "npm run test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "lint": "./node_modules/.bin/tslint --project \".\""
+      "./node_modules/.bin/jest --collectCoverage --ci --testResultsProcessor=jest-junit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "lint": "./node_modules/.bin/tslint --project \".\"",
+    "lint:ci":
+      "./node_modules/.bin/tslint --project \".\" --out reports/tslint-results.xml --format junit"
   },
   "author": "Harry Mitchinson",
   "license": "ISC",
