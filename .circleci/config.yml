@@ -9,7 +9,7 @@ jobs:
       - image: circleci/node:8.9.4
     working_directory: ~/openbadges-google-apps-script
     environment:
-      JEST_JUNIT_OUTPUT: "reports/jest-results.xml"
+      JEST_JUNIT_OUTPUT: reports/jest-results.xml
     steps:
       # Checkout the source code.
       - checkout
