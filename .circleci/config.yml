@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:8.9.4
-    working_directory: ~/repo
+    working_directory: ~/openbadges-google-apps-script
     steps:
       # Checkout the source code.
       - checkout
@@ -16,31 +16,24 @@ jobs:
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run: npm install
       - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
       
       # Build the app.
-      - run: npm run build
+      - run: 
+          name: "Build"
+          command: npm run build
       
-      # Create the reports folder for tests. 
-      - run: mkdir reports && mkdir reports/tslint && mkdir reports/jest
-
-      # Run tslint on the project.
-      - run:
-          name: "npm run lint"
-          command: npm run lint -- --out reports/tslint/tslint-results.xml --format junit
-
-      # Run the test suite.
-      - run:
-          name: "npm run test"
+      # Test the app.
+      - run: 
+          name: "Test"
           environment:
-            JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
-          command: npm run test:ci -- --ci --testResultsProcessor="jest-junit"
+            JEST_JUNIT_OUTPUT: reports/jest-results.xml
+          command: mkdir reports && npm run lint -- --out reports/tslint-results.xml --format junit && npm run test:ci -- --ci --testResultsProcessor="jest-junit"
 
       # Store the test reports.
       - store_test_results:
@@ -51,4 +44,3 @@ jobs:
       # Store the build artifacts.
       - store_artifacts:
           path: dist
-      
