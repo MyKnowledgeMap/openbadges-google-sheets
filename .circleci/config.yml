@@ -28,7 +28,7 @@ jobs:
       - run: npm run build
       
       # Create the reports folder for tests. 
-      - run: mkdir reports
+      - run: mkdir reports && mkdir reports/tslint && mkdir reports/jest
 
       # Run tslint on the project.
       - run:
