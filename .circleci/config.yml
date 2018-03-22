@@ -1,10 +1,12 @@
+defaults: &defaults
+  working_directory: ~/project
+  docker:
+    - image: circleci/node:8.9.4
+     
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/node:8.9.4
-    environment:
-      JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
+  install-dependencies:
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -14,13 +16,42 @@ jobs:
           key: v1-deps-{{ .Revision }}
           paths:
           - node_modules
+  test:
+    <<: *defaults
+    steps:
+    environment:
+      JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-deps-{{ .Revision }}
+      - run: npm install
       - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
       - run: npm run lint:ci
-      - run: npm run build
       - run: npm run test:ci
       - store_test_results:
           path: reports
       - store_artifacts:
           path: reports
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-deps-{{ .Revision }}
+      - run: npm install
+      - run: npm run build
       - store_artifacts:
           path: dist
+          
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - install-dependencies
+      - test:
+          requires:
+            - install-dependencies
+      - build:
+          requires:
+            - install-dependencies
