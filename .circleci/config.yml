@@ -7,12 +7,7 @@ version: 2
 jobs:
   checkout:
     <<: *defaults
-    steps:
-      - restore_cache:
-          keys:
-            - source-v1-{{ .Branch }}-{{ .Revision }}
-            - source-v1-{{ .Branch }}-
-            - source-v1-    
+    steps: 
       - checkout
       - save_cache:
           key: source-v1-{{ .Branch }}-{{ .Revision }}
