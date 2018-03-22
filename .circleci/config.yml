@@ -5,15 +5,28 @@ defaults: &defaults
      
 version: 2
 jobs:
+  checkout:
+    <<: *defaults
+    steps: 
+      - checkout
+      - save_cache:
+          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
   install-dependencies:
     <<: *defaults
     steps:
+      - restore_cache:
+          key: source-v1-{{ .Branch }}-{{ .Revision }}
       - checkout
       - restore_cache:
-          key: v1-deps-
+          keys:
+            - dependencies-v1-{{ .Branch }}-{{ .Revision }}
+            - dependencies-v1-{{ .Branch }}-
+            - dependencies-v1-
       - run: npm install
       - save_cache:
-          key: v1-deps-{{ .Revision }}
+          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
           paths:
           - node_modules
   test:
@@ -22,9 +35,11 @@ jobs:
     environment:
       JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
     steps:
+      - restore_cache:
+          key: source-v1-{{ .Branch }}-{{ .Revision }}
       - checkout
       - restore_cache:
-          key: v1-deps-{{ .Revision }}
+          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
       - run: npm install
       - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
       - run: npm run lint:ci
@@ -36,9 +51,11 @@ jobs:
   build:
     <<: *defaults
     steps:
+      - restore_cache:
+          key: source-v1-{{ .Branch }}-{{ .Revision }}
       - checkout
       - restore_cache:
-          key: v1-deps-{{ .Revision }}
+          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
       - run: npm install
       - run: npm run build
       - store_artifacts:
@@ -48,7 +65,10 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - install-dependencies
+      - checkout
+      - install-dependencies:
+          requires:
+            - checkout
       - test:
           requires:
             - install-dependencies
