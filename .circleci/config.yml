@@ -1,10 +1,10 @@
 defaults:
-  docker: &node_container
+  docker: &node-container
     - image: 'circleci/node:8.9.4'
 version: 2
 jobs:
-  checkout:
-    docker: *node_container
+  checkout-source:
+    docker: *node-container
     steps:
       - checkout
       - save_cache:
@@ -12,7 +12,7 @@ jobs:
           paths:
             - '.git'
   install-dependencies:
-    docker: *node_container
+    docker: *node-container
     steps:
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
@@ -28,7 +28,7 @@ jobs:
           paths:
             - 'node_modules'
   test:
-    docker: *node_container
+    docker: *node-container
     environment:
       JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
@@ -46,7 +46,7 @@ jobs:
       - store_artifacts:
           path: 'reports'
   build:
-    docker: *node_container
+    docker: *node-container
     steps:
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
@@ -61,10 +61,10 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - checkout
+      - checkout-source
       - install-dependencies:
           requires:
-            - 'checkout'
+            - 'checkout-source'
       - test:
           requires:
             - 'install-dependencies'
