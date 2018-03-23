@@ -309,7 +309,7 @@ function setDynamicProperties(
       .map((key) => ({ key, value: props[key].toLowerCase() }))
       .filter((prop) => rgx.test(prop.value))
       .forEach((prop) => {
-        const titleFromProp = prop.value.replace("{{", "").replace("}}", "");
+        const titleFromProp = prop.value.replace(/[{}]/g, "");
         const item = responses.filter(
           (resp) => titleFromProp === resp.title.toLowerCase()
         )[0];
