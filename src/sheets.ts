@@ -9,30 +9,6 @@ const apiRgx = new RegExp(/(api)(\S+)/);
  * Adds the OpenBadges menu to the toolbar
  */
 function onOpen(): void {
-  // Default the properties so the user
-  // will always be able to open the settings menu.
-  const documentProperties = PropertiesService.getDocumentProperties();
-  let props = documentProperties.getProperties();
-  if (Object.keys(props).length === 0) {
-    props = {
-      apiKey: "",
-      apiUrl: "",
-      apiToken: "",
-      activityId: "",
-      text1: "",
-      int1: "",
-      int2: "",
-      date1: "",
-      activityTime: "",
-      userId: "",
-      firstName: "",
-      lastName: "",
-      verified: "",
-      issued: ""
-    };
-    documentProperties.setProperties(props);
-  }
-
   // Add the options to the menu.
   const menus = [
     { name: "Settings", functionName: "showSettingsSidebar" },
@@ -241,7 +217,31 @@ function showSettingsSidebar(): void {
   ) as ISheetsSettingsTemplate;
 
   // Add the bound properties to the template.
-  const props = PropertiesService.getDocumentProperties().getProperties() as ISheetsDocumentProperties;
+  const documentProperties = PropertiesService.getDocumentProperties();
+  let props = documentProperties.getProperties() as ISheetsDocumentProperties;
+
+  // Default the properties so the user
+  // will always be able to open the settings menu.
+  if (Object.keys(props).length === 0) {
+    props = {
+      apiKey: "",
+      apiUrl: "",
+      apiToken: "",
+      activityId: "",
+      text1: "",
+      int1: "",
+      int2: "",
+      date1: "",
+      activityTime: "",
+      userId: "",
+      firstName: "",
+      lastName: "",
+      verified: "",
+      issued: ""
+    };
+    documentProperties.setProperties(props);
+  }
+
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
     .forEach((prop) => {

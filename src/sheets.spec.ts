@@ -24,15 +24,6 @@ describe("sheets", () => {
         addMenu: jest.fn()
       } as any;
 
-      const props: ISheetsDocumentProperties = { key: "value" } as any;
-      const documentProperties: GoogleAppsScript.Properties.Properties = {
-        getProperties: jest.fn().mockReturnValue(props),
-        setProperties: jest.fn()
-      } as any;
-      global.PropertiesService = {
-        getDocumentProperties: () => documentProperties
-      } as any;
-
       global.SpreadsheetApp = {
         getActiveSpreadsheet: jest.fn().mockReturnValue(spreadsheet)
       } as any;
@@ -44,37 +35,8 @@ describe("sheets", () => {
       expect(spreadsheet.addMenu).toBeCalled();
     };
 
-    const expectProps = (fnUnderTest: () => void) => {
-      // Arrange
-      const spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet = {
-        addMenu: jest.fn()
-      } as any;
-
-      const props: ISheetsDocumentProperties = {} as any;
-      const documentProperties: GoogleAppsScript.Properties.Properties = {
-        getProperties: jest.fn().mockReturnValue(props),
-        setProperties: jest.fn()
-      } as any;
-      global.PropertiesService = {
-        getDocumentProperties: () => documentProperties
-      } as any;
-
-      global.SpreadsheetApp = {
-        getActiveSpreadsheet: jest.fn().mockReturnValue(spreadsheet)
-      } as any;
-
-      // Act
-      fnUnderTest();
-
-      // Assert
-      expect(documentProperties.setProperties).toBeCalled();
-    };
-
     it("onInstall should add menu", () => expectMenu(module.onInstall));
-    it("onInstall should set default props", () =>
-      expectProps(module.onInstall));
     it("onOpen should add menu", () => expectMenu(module.onOpen));
-    it("onOpen should set default props", () => expectProps(module.onOpen));
   });
 
   describe("onSaveConfiguration", () => {
@@ -120,12 +82,9 @@ describe("sheets", () => {
 
     // Setup the properties mock.
     const setupProperties = () => {
-      props = {
-        apiKey: "test",
-        apiUrl: undefined
-      } as any;
       documentProperties = {
-        getProperties: jest.fn().mockReturnValue(props)
+        getProperties: jest.fn().mockReturnValue(props),
+        setProperties: jest.fn()
       } as any;
       global.PropertiesService = {
         getDocumentProperties: () => documentProperties
@@ -142,32 +101,55 @@ describe("sheets", () => {
       } as any;
     };
 
-    beforeAll(() => {
-      // Arrange
-      setupHtml();
-      setupProperties();
-      setupSheetUi();
+    describe("when properties exist", () => {
+      beforeAll(() => {
+        // Arrange
+        props = {
+          apiKey: "test",
+          apiUrl: undefined
+        } as any;
+        setupHtml();
+        setupProperties();
+        setupSheetUi();
 
-      // Act
-      module.showSettingsSidebar();
+        // Act
+        module.showSettingsSidebar();
+      });
+
+      it("should fetch template from module", () =>
+        expect(global.HtmlService.createTemplate).toBeCalled());
+
+      it("should set the html title", () =>
+        expect(output.setTitle).toBeCalledWith("Settings"));
+
+      it("should use the html to display sidebar", () =>
+        expect(ui.showSidebar).toBeCalledWith(output));
+
+      it("should bind value to template when property is defined", () =>
+        expect(template.apiKey).toBe(props.apiKey));
+
+      it("should bind value to template as empty string when property is undefined", () =>
+        expect(template.apiUrl).toBe(""));
     });
 
-    it("should fetch template from module", () =>
-      expect(global.HtmlService.createTemplate).toBeCalled());
+    describe("when properties do not exist", () => {
+      beforeAll(() => {
+        // Arrange
+        props = {} as any;
+        setupHtml();
+        setupProperties();
+        setupSheetUi();
 
-    it("should set the html title", () =>
-      expect(output.setTitle).toBeCalledWith("Settings"));
+        // Act
+        module.showSettingsSidebar();
+      });
 
-    it("should use the html to display sidebar", () =>
-      expect(ui.showSidebar).toBeCalledWith(output));
-
-    describe("when property is defined", () =>
-      it("should bind value to template", () =>
-        expect(template.apiKey).toBe(props.apiKey)));
-
-    describe("when property is undefined", () =>
-      it("should bind value to template as empty string", () =>
-        expect(template.apiUrl).toBe("")));
+      it("should set default values", () => {
+        expect(documentProperties.setProperties).toBeCalledWith(
+          expect.objectContaining({ apiKey: expect.any(String) })
+        );
+      });
+    });
   });
 
   describe("onRun", () => {
