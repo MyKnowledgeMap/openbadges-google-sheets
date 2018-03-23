@@ -38,7 +38,7 @@ jobs:
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
-      - run: 'mkdir reports reports/jest reports/tslint'
+      - run: 'mkdir -p reports/{jest,tslint}'
       - run: 'npm run lint:ci'
       - run: 'npm run test:ci'
       - store_test_results:
