@@ -241,7 +241,6 @@ function showSettingsSidebar(): void {
     };
     documentProperties.setProperties(props);
   }
-  // Test
 
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
