@@ -1,66 +1,62 @@
-defaults: &defaults
-  working_directory: ~/project
-  docker:
-    - image: circleci/node:8.9.4
-     
+defaults:
+  docker: &node_container
+    - image: 'circleci/node:8.9.4'
 version: 2
 jobs:
   checkout:
-    <<: *defaults
-    steps: 
+    docker: *node_container
+    steps:
       - checkout
       - save_cache:
-          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
           paths:
-            - ".git"
+            - '.git'
   install-dependencies:
-    <<: *defaults
+    docker: *node_container
     steps:
       - restore_cache:
-          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
       - restore_cache:
           keys:
-            - dependencies-v1-{{ .Branch }}-{{ .Revision }}
-            - dependencies-v1-{{ .Branch }}-
-            - dependencies-v1-
-      - run: npm install
+            - 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
+            - 'dependencies-v1-{{ .Branch }}-'
+            - 'dependencies-v1-'
+      - run: 'npm install'
       - save_cache:
-          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
           paths:
-          - node_modules
+            - 'node_modules'
   test:
-    <<: *defaults
-    steps:
+    docker: *node_container
     environment:
-      JEST_JUNIT_OUTPUT: reports/jest/jest-results.xml
+      JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
       - restore_cache:
-          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
       - restore_cache:
-          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
-      - run: npm install
-      - run: mkdir reports && mkdir reports/jest && mkdir reports/tslint
-      - run: npm run lint:ci
-      - run: npm run test:ci
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
+      - run: 'npm install'
+      - run: 'mkdir reports && mkdir reports/jest && mkdir reports/tslint'
+      - run: 'npm run lint:ci'
+      - run: 'npm run test:ci'
       - store_test_results:
-          path: reports
+          path: 'reports'
       - store_artifacts:
-          path: reports
+          path: 'reports'
   build:
-    <<: *defaults
+    docker: *node_container
     steps:
       - restore_cache:
-          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
       - restore_cache:
-          key: dependencies-v1-{{ .Branch }}-{{ .Revision }}
-      - run: npm install
-      - run: npm run build
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
+      - run: 'npm install'
+      - run: 'npm run build'
       - store_artifacts:
-          path: dist
-          
+          path: 'dist'
 workflows:
   version: 2
   build-and-test:
@@ -68,10 +64,10 @@ workflows:
       - checkout
       - install-dependencies:
           requires:
-            - checkout
+            - 'checkout'
       - test:
           requires:
-            - install-dependencies
+            - 'install-dependencies'
       - build:
           requires:
-            - install-dependencies
+            - 'install-dependencies'
