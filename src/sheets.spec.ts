@@ -211,6 +211,19 @@ describe("sheets", () => {
     };
 
     describe("when verified and issued are used", () => {
+      describe("when is verified and issued is falsy", () => {
+        it("should update issued column", () => {
+          // Arrange
+          const values = ["Y", ""];
+          setupSpreadsheet(values);
+          setupProperties({ verified: "{{A}}", issued: "{{B}}" });
+          setupUrlFetch(200);
+          // Act
+          module.onRun();
+          // Assert
+          expect(range.setValues).not.toBeCalledWith([values]);
+        });
+      });
       describe("when is verified and not issued", () => {
         it("should update issued column", () => {
           // Arrange
@@ -454,6 +467,43 @@ describe("sheets", () => {
         // Assert
         expect(payloads[0].text1).toBe(value.toString());
       });
+    });
+  });
+
+  describe("getDynamicColumns", () => {
+    describe("when props are not dynamic", () => {
+      it("should return empty array", () => {
+        // Arrange
+        const props: ISheetsDocumentProperties = {
+          firstName: "not dynamic",
+          lastName: "another value",
+          text1: "{still not dynamic}"
+        } as any;
+
+        // Act
+        const result = module.getDynamicColumns(props);
+
+        // Assert
+        expect(result.length).toBe(0);
+      });
+    });
+
+    describe("when props are dynamic", () => {
+      // Arrange
+      const props: ISheetsDocumentProperties = {
+        firstName: "{{A}}",
+        lastName: "{{B}}",
+        text1: "not dynamic"
+      } as any;
+
+      // Act
+      const result = module.getDynamicColumns(props);
+
+      // Assert
+      it("should return array of dynamic properties", () =>
+        expect(result.length).toBe(2));
+      it("should strip dynamic template from value", () =>
+        expect(result[0].value).toBe("A"));
     });
   });
 });

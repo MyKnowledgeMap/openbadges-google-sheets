@@ -168,18 +168,11 @@ function convertLetterToNumber(letter: string): number {
 function getDynamicColumns(props: ISheetsDocumentProperties) {
   return Object.keys(props)
     .filter((key) => dynamicPropRgx.test(props[key]))
-    .map((key) => ({
-      key,
-      value: props[key]
-        .toUpperCase()
-        .replace("{{", "")
-        .replace("}}", "")
-    }))
-    .map((prop) => ({
-      key: prop.key,
-      value: prop.value,
-      column: convertLetterToNumber(prop.value)
-    }));
+    .map((key) => {
+      const value = props[key].replace(/[{}]/g, "").toUpperCase();
+      const column = convertLetterToNumber(value);
+      return { key, value, column };
+    });
 }
 
 /**
@@ -269,5 +262,6 @@ export {
   onRun,
   showSettingsSidebar,
   populateDynamicPayloads,
-  populateStaticPayloads
+  populateStaticPayloads,
+  getDynamicColumns
 };
