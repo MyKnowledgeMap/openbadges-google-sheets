@@ -19,7 +19,6 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
             - 'dependencies-v1-{{ .Branch }}-'
             - 'dependencies-v1-'
       - run: 'npm install'
