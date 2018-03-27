@@ -20,27 +20,28 @@
       <li class="collection-item">
         <div class="input-field">
           <input id="apiUrl" name="apiUrl" type="url" class="validate" required value="<?= apiUrl ?>">
-          <label for="apiUrl" data-error="Not a valid URL">API URL</label>
+          <label for="apiUrl" data-error="Not a valid URL">API URL*</label>
         </div>
         <div class="input-field">
           <input id="apiKey" name="apiKey" type="text" class="validate" required value="<?= apiKey ?>">
-          <label for="apiKey">API Key</label>
+          <label for="apiKey">API Key*</label>
         </div>
         <div class="input-field">
           <input id="apiToken" name="apiToken" type="text" class="validate" required value="<?= apiToken ?>">
-          <label for="apiToken">API Token</label>
+          <label for="apiToken">API Token*</label>
         </div>
+        <hr />
         <div class="input-field">
           <input id="activityId" name="activityId" type="text" class="validate" required value="<?= activityId ?>">
-          <label for="activityId">Activity ID</label>
+          <label for="activityId">Activity ID*</label>
         </div>
         <div class="input-field">
           <input id="activityTime" name="activityTime" type="text" class="validate" required value="<?= activityTime ?>">
-          <label for="activityTime">Activity Time</label>
+          <label for="activityTime">Activity Time*</label>
         </div>
         <div class="input-field">
           <input id="userId" name="userId" type="text" class="validate" required value="<?= userId ?>">
-          <label for="userId">User ID</label>
+          <label for="userId">User ID*</label>
         </div>
         <div class="input-field">
           <input id="firstName" name="firstName" type="text" class="validate" value="<?= firstName ?>">
@@ -62,20 +63,24 @@
       <li class="collection-item">
         <div class="input-field">
           <input id="text1" name="text1" type="text" data-length="255" class="validate" value="<?= text1 ?>">
-          <label for="text1">Text</label>
+          <label for="text1">Text 1</label>
         </div>
         <div class="input-field">
-          <input id="int1" name="int1" type="number" step="1" class="validate" value="<?= int1 ?>">
+          <input id="text2" name="text2" type="text" data-length="255" class="validate" value="<?= text2 ?>">
+          <label for="text2">Text 2</label>
+        </div>
+        <div class="input-field">
+          <input id="date1" name="date1" type="text" data-length="255" class="validate" value="<?= date1 ?>">
+          <label for="date1">Date 1</label>
+        </div>
+        <div class="input-field">
+          <input id="int1" name="int1" type="text" data-length="10" class="validate" value="<?= int1 ?>">
           <label for="int1">Integer 1</label>
         </div>
         <div class="input-field">
-          <input id="int2" name="int2" type="number" step="1" class="validate" value="<?= int2 ?>">
+          <input id="int2" name="int2" type="text" data-length="10" class="validate" value="<?= int2 ?>">
           <label for="int2">Integer 2</label>
         </div>
-        <!-- <div class="input-field">
-          <input id="date1" name="date1" type="text" class="validate" value="<?= date1 ?>">
-          <label for="date1">Date</label>
-        </div> -->
       </li>
       <li class="collection-item grey lighten-3">
         <div>
