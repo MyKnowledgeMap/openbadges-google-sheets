@@ -2,6 +2,7 @@
   "name": "@myknowledgemap/openbadges-google-apps-script",
   "version": "1.0.0",
   "description": "Integrations for Google Sheets & Forms with OpenBadges.me",
+  "repository": "github:harrymitchinson/openbadges-google-apps-script",
   "scripts": {
     "precommit": "lint-staged",
     "build":
@@ -14,7 +15,7 @@
       "./node_modules/.bin/tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit"
   },
   "author": "Harry Mitchinson",
-  "license": "ISC",
+  "license": "MIT",
   "lint-staged": {
     "*.ts": ["tslint --fix", "prettier --parser typescript --write", "git add"],
     "*.json": ["prettier --parser json --write", "git add"],
