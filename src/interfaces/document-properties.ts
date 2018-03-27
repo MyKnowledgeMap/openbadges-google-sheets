@@ -25,6 +25,7 @@ interface ISheetsDocumentProperties {
   apiToken: string;
   activityId: string;
   text1: string;
+  text2: string;
   int1: string;
   int2: string;
   date1: string;

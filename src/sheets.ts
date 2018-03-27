@@ -229,6 +229,7 @@ function showSettingsSidebar(): void {
       apiToken: "",
       activityId: "",
       text1: "",
+      text2: "",
       int1: "",
       int2: "",
       date1: "",
