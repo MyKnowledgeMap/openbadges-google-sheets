@@ -7,9 +7,11 @@ Google Apps Scripts for OpenBadges.me containing add-ons for Google Forms and Go
 These add-ons can be used to create *activity events* which are simply records that something has happened. Using OpenBadges.me you can setup rules and automatically issue badges to your users when rule conditions have been met by the activity events.
 
 **Forms add-on**
+
 This add-on allows you to create an activity event when a form has been completed.
 
 **Sheets add-on**
+
 This add-on allows you to create many activity events and is manually triggered and processed. The add-on can use tracking columns which requires rows to be verified before they are processed. 
 
 ## How to install
@@ -38,6 +40,7 @@ This add-on allows you to create many activity events and is manually triggered 
 Google Apps Script has some limitations which you should be aware of if you're planning on developing or contributing.
 
 **Triggers**
+
 If an add-on requires access to the `OnFormSubmit` event trigger, the add-on will require full authorization permissions which can only be obtained by installing the add-on from the Google Marketplace and following the authorization workflow. 
 
 This limitation can be seen in the Forms add-on which means you will have to install the MyKnowledgeMap version from the marketplace or deploy your own to the marketplace to test and use this trigger.
@@ -57,7 +60,7 @@ These add-ons are written in Typescript and transpiled to ES5 using Babel with t
 - babel-plugin-transform-html-import-to-string (html imports become inline strings).
 - babel-plugin-transform-inline-environment-variables (env variables are replaced with build-time values).
 
-### Quotas
+**Quotas**
 
 Google Apps Script has limits on the usage of various Google services and APIs. These can be seen on the [quota limits](https://developers.google.com/apps-script/guides/services/quotas) page. 
 
