@@ -131,25 +131,6 @@ describe("sheets", () => {
       it("should bind value to template as empty string when property is undefined", () =>
         expect(template.apiUrl).toBe(""));
     });
-
-    describe("when properties do not exist", () => {
-      beforeAll(() => {
-        // Arrange
-        props = {} as any;
-        setupHtml();
-        setupProperties();
-        setupSheetUi();
-
-        // Act
-        module.showSettingsSidebar();
-      });
-
-      it("should set default values", () => {
-        expect(documentProperties.setProperties).toBeCalledWith(
-          expect.objectContaining({ apiKey: expect.any(String) })
-        );
-      });
-    });
   });
 
   describe("onRun", () => {
