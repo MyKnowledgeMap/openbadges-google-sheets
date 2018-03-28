@@ -3,6 +3,7 @@ require("dotenv-safe").config();
 
 // The plugins to transform code.
 const plugins = [
+  [require("babel-plugin-transform-object-assign")],
   [
     // Remove export statements since they throw erorrs in GAS.
     require("babel-plugin-transform-remove-export")
