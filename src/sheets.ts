@@ -218,30 +218,31 @@ function showSettingsSidebar(): void {
 
   // Add the bound properties to the template.
   const documentProperties = PropertiesService.getDocumentProperties();
-  let props = documentProperties.getProperties() as ISheetsDocumentProperties;
+  const savedProps = documentProperties.getProperties() as ISheetsDocumentProperties;
 
-  // Default the properties so the user
-  // will always be able to open the settings menu.
-  if (Object.keys(props).length === 0) {
-    props = {
-      apiKey: "",
-      apiUrl: "",
-      apiToken: "",
-      activityId: "",
-      text1: "",
-      text2: "",
-      int1: "",
-      int2: "",
-      date1: "",
-      activityTime: "",
-      userId: "",
-      firstName: "",
-      lastName: "",
-      verified: "",
-      issued: ""
-    };
-    documentProperties.setProperties(props);
-  }
+  const defaultProps = {
+    apiKey: "",
+    apiUrl: "",
+    apiToken: "",
+    activityId: "",
+    text1: "",
+    text2: "",
+    int1: "",
+    int2: "",
+    date1: "",
+    activityTime: "",
+    userId: "",
+    firstName: "",
+    lastName: "",
+    verified: "",
+    issued: ""
+  };
+
+  const props: ISheetsDocumentProperties = Object.assign(
+    {},
+    defaultProps,
+    savedProps
+  );
 
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
