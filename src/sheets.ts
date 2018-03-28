@@ -9,19 +9,23 @@ const apiRgx = new RegExp(/(api)(\S+)/);
  * Adds the OpenBadges menu to the toolbar
  */
 function onOpen(): void {
+  Logger.log("[onOpen] Adding menu to active spreadsheet.");
   // Add the options to the menu.
   const menus = [
     { name: "Settings", functionName: "showSettingsSidebar" },
     { name: "Run", functionName: "onRun" }
   ];
   SpreadsheetApp.getActiveSpreadsheet()!.addMenu("OpenBadges", menus);
+  Logger.log("[onOpen] Menu added.");
 }
 
 /**
  * Triggers the onOpen event.
  */
 function onInstall(): void {
+  Logger.log("[onInstall] Add-on starting install.");
   onOpen();
+  Logger.log("[onInstall] Add-on finished install.");
 }
 
 /**
@@ -32,6 +36,7 @@ function onInstall(): void {
 function onSaveConfiguration(props: ISheetsDocumentProperties): void {
   // Save the properties so they can be used later.
   PropertiesService.getDocumentProperties().setProperties(props);
+  Logger.log("[onSaveConfiguration] Saved properties successfully.");
 }
 
 /**
@@ -42,6 +47,11 @@ function onRun(): boolean {
   // Get the current sheet and get total the number of rows.
   const sheet = SpreadsheetApp.getActiveSheet();
   const numberOfRows = sheet.getLastRow();
+  Logger.log(
+    `[onRun] Processing starting for sheet (${
+      sheet.getSheetId
+    }) with ${numberOfRows} row(s).`
+  );
 
   // Create the payloads object and initilize row.
   let payloads: ICreateActivityEvent[] = [];
@@ -58,9 +68,12 @@ function onRun(): boolean {
   // Populate the payloads with static data from the properties.
   populateStaticPayloads(props, payloads);
 
+  Logger.log("[onRun] Payloads populated successfully.");
+
   const dynamicColumns = getDynamicColumns(props);
   const issuedColumn = dynamicColumns.filter((x) => x.key === "issued")[0];
   if (issuedColumn !== undefined) {
+    Logger.log("[onRun] Tracking columns are in use.");
     // Filter the payloads and remove events which should not be issued yet.
     payloads = payloads.filter((x) => {
       // If using verified, it must be verified.
@@ -91,6 +104,9 @@ function onRun(): boolean {
       }
     }
     issuedRange.setValues(values);
+    Logger.log("[onRun] Issued column was updated.");
+  } else {
+    Logger.log("[onRun] Tracking columns are not in use.");
   }
 
   // Build the request headers.
@@ -110,15 +126,18 @@ function onRun(): boolean {
 
   // Make the request and get the response.
   const response = UrlFetchApp.fetch(props.apiUrl, options);
+  Logger.log("[onRun] Request was sent to API.");
 
   // If the response code is 200 Ok then we can stop processing as it was a successful request.
   const responseCode = response.getResponseCode();
+  Logger.log(`[onRun] Response code was ${responseCode}.`);
 
   if (responseCode === 200) {
     SpreadsheetApp.getUi().alert(`Sent ${payloads.length} event(s)`);
     return true;
   }
-  Logger.log(response.getContentText());
+
+  Logger.log(`[onRun] Response body was ${response.getContentText()}`);
   return false;
 }
 
@@ -215,6 +234,7 @@ function showSettingsSidebar(): void {
   const template = HtmlService.createTemplate(
     settingsSidebarTemplate
   ) as ISheetsSettingsTemplate;
+  Logger.log(`[showSettingsSidebar] Template created.`);
 
   // Add the bound properties to the template.
   const documentProperties = PropertiesService.getDocumentProperties();
@@ -243,18 +263,24 @@ function showSettingsSidebar(): void {
     defaultProps,
     savedProps
   );
+  Logger.log(
+    `[showSettingsSidebar] Default properties overwritten by user properties.`
+  );
 
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
     .forEach((prop) => {
       template[prop.key] = prop.value || "";
     });
+  Logger.log(`[showSettingsSidebar] Properties bound to template.`);
 
   // Evaluate the template to HTML so bindings are rendered.
   const html = template.evaluate().setTitle("Settings");
+  Logger.log(`[showSettingsSidebar] Template evaluated as HTML.`);
 
   // Create the sidebar from the HTML.
   SpreadsheetApp.getUi().showSidebar(html);
+  Logger.log(`[showSettingsSidebar] Sidebar displayed successfully.`);
 }
 
 export {
