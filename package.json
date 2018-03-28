@@ -32,6 +32,7 @@
     "@types/node": "^9.4.6",
     "babel-plugin-transform-html-import-to-string": "0.0.1",
     "babel-plugin-transform-inline-environment-variables": "^0.3.0",
+    "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-plugin-transform-remove-export": "^1.0.0",
     "coveralls": "^3.0.0",
     "dotenv-safe": "^5.0.1",

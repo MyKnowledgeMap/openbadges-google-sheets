@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "pretty": true,
-    "target": "es5",
+    "target": "es6",
     "allowJs": false,
     "noEmit": true,
     "strict": true,
