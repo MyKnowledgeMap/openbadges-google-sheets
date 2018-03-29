@@ -56,25 +56,20 @@ jobs:
       - run: 'npm run build'
       - store_artifacts:
           path: 'dist'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - dist
-  deploy:
+  build-and-deploy:
     docker: *node-container
     steps:
-      - attach_workspace:
-          at: /project
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
-      - restore_cache:
-          key: 'build-v1-{{ .Branch }}-{{ .Revision }}'
+      - run: 'npm run build'
       - run: 'npm run package'
       - run: 'npm run deploy'
+      - store_artifacts:
+          path: 'dist'
 workflows:
   version: 2
   build-test-and-deploy:
@@ -89,9 +84,13 @@ workflows:
       - build:
           requires:
             - 'install-dependencies'
-      - deploy:
+          filters:
+            branches:
+              ignore:
+                - master
+      - build-and-deploy:
           requires:
-            - 'build'
+            - 'install-dependencies'
           filters:
             branches:
               only:
