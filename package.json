@@ -5,14 +5,16 @@
   "repository": "github:harrymitchinson/openbadges-google-apps-script",
   "scripts": {
     "precommit": "lint-staged",
-    "build":
-      "./node_modules/.bin/tsc && babel src --out-dir dist --extensions \".ts\"",
-    "test": "./node_modules/.bin/jest",
+    "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
+    "test": "jest",
     "test:ci":
-      "./node_modules/.bin/jest --collectCoverage --ci --testResultsProcessor=jest-junit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "lint": "./node_modules/.bin/tslint --project \".\"",
+      "jest --collectCoverage --ci --testResultsProcessor=jest-junit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "lint": "tslint --project \".\"",
     "lint:ci":
-      "./node_modules/.bin/tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit"
+      "tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit",
+    "prepackage": "node ./scripts/pre-package",
+    "package": "node ./scripts/package",
+    "deploy": "node ./scripts/deploy"
   },
   "author": "Harry Mitchinson",
   "license": "MIT",
@@ -30,10 +32,12 @@
     "@types/google-apps-script": "0.0.21",
     "@types/jest": "^22.2.0",
     "@types/node": "^9.4.6",
+    "archiver": "^2.1.1",
     "babel-plugin-transform-html-import-to-string": "0.0.1",
     "babel-plugin-transform-inline-environment-variables": "^0.3.0",
     "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-plugin-transform-remove-export": "^1.0.0",
+    "chrome-webstore-upload": "^0.2.2",
     "coveralls": "^3.0.0",
     "dotenv-safe": "^5.0.1",
     "husky": "^0.14.3",
