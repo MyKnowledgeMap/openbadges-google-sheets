@@ -83,14 +83,14 @@ workflows:
             - 'install-dependencies'
       - build:
           requires:
-            - 'install-dependencies'
+            - 'test'
           filters:
             branches:
               ignore:
                 - master
       - build-and-deploy:
           requires:
-            - 'install-dependencies'
+            - 'test'
           filters:
             branches:
               only:
