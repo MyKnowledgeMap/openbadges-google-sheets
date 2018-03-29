@@ -5,18 +5,24 @@ version: 2
 jobs:
   checkout-source:
     docker: *node-container
+    working_directory: ~/project
     steps:
       - checkout
+      - attach_workspace:
+          at:  ~/project
       - save_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
           paths:
             - '.git'
   install-dependencies:
     docker: *node-container
+    working_directory: ~/project
     steps:
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
+      - attach_workspace:
+          at:  ~/project
       - restore_cache:
           keys:
             - 'dependencies-v1-{{ .Branch }}-'
@@ -46,6 +52,7 @@ jobs:
           path: 'reports'
   build:
     docker: *node-container
+    working_directory: ~/project
     steps:
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
@@ -63,11 +70,11 @@ jobs:
   deploy:
     docker: *node-container
     steps:
-      - attach_workspace:
-          at: /project
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
+      - attach_workspace:
+          at: /project
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
