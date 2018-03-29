@@ -57,14 +57,14 @@ jobs:
       - store_artifacts:
           path: 'dist'
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: /project
           paths:
             - dist
   deploy:
     docker: *node-container
     steps:
       - attach_workspace:
-          at: /tmp/workspace
+          at: /project
       - restore_cache:
           key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
