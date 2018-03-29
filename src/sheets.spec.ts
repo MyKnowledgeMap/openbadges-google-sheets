@@ -135,6 +135,7 @@ describe("sheets", () => {
 
   describe("onRun", () => {
     let range: GoogleAppsScript.Spreadsheet.Range;
+    const ui = { alert: jest.fn() };
     // Setup the spreadsheet mock.
     const setupSpreadsheet = (values: any[]) => {
       range = {
@@ -146,9 +147,10 @@ describe("sheets", () => {
         getLastColumn: jest.fn().mockReturnValue(10),
         getRange: jest.fn().mockReturnValue(range)
       } as any;
+
       global.SpreadsheetApp = {
-        getActiveSheet: () => sheet,
-        getUi: () => ({ alert: jest.fn() })
+        getActiveSheet: jest.fn().mockReturnValue(sheet),
+        getUi: jest.fn().mockReturnValue(ui)
       } as any;
     };
 
@@ -163,10 +165,10 @@ describe("sheets", () => {
     };
 
     // Setup the url fetch mock.
-    const setupUrlFetch = (code: number) => {
+    const setupUrlFetch = (code: number, body?: string) => {
       const response: GoogleAppsScript.URL_Fetch.HTTPResponse = {
         getResponseCode: jest.fn().mockReturnValue(code),
-        getContentText: jest.fn()
+        getContentText: jest.fn().mockReturnValue(body)
       } as any;
       global.UrlFetchApp = {
         fetch: jest.fn().mockReturnValue(response)
@@ -229,15 +231,48 @@ describe("sheets", () => {
     });
 
     describe("when request is not successful", () => {
-      it("should return false", () => {
-        // Arrange
-        setupSpreadsheet([]);
-        setupProperties({});
-        setupUrlFetch(500);
-        // Act
-        const result = module.onRun();
-        // Assert
-        expect(result).toBe(false);
+      describe("when response body has additional errors", () => {
+        let result: boolean;
+        const body = {
+          message: "test",
+          errors: [{ property: "int1", message: "not int" }]
+        };
+        beforeAll(() => {
+          // Arrange
+          setupSpreadsheet([]);
+          setupProperties({});
+          setupUrlFetch(500, JSON.stringify(body));
+          // Act
+          result = module.onRun();
+        });
+        it("should return false", () => expect(result).toBe(false));
+        it("should display error message", () =>
+          expect(ui.alert).toBeCalledWith(
+            expect.stringContaining(body.message)
+          ));
+        it("should handle additional errors", () =>
+          expect(ui.alert).toBeCalledWith(
+            expect.stringContaining(body.errors[0].message)
+          ));
+      });
+      describe("when response body has no additional errors", () => {
+        let result: boolean;
+        const body = {
+          message: "test"
+        };
+        beforeAll(() => {
+          // Arrange
+          setupSpreadsheet([]);
+          setupProperties({});
+          setupUrlFetch(500, JSON.stringify(body));
+          // Act
+          result = module.onRun();
+        });
+        it("should return false", () => expect(result).toBe(false));
+        it("should display error message", () =>
+          expect(ui.alert).toBeCalledWith(
+            expect.stringContaining(body.message)
+          ));
       });
     });
   });

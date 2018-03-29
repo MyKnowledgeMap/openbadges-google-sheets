@@ -68,8 +68,6 @@ function onRun(): boolean {
   // Populate the payloads with static data from the properties.
   populateStaticPayloads(props, payloads);
 
-  Logger.log("[onRun] Payloads populated successfully.");
-
   const dynamicColumns = getDynamicColumns(props);
   const issuedColumn = dynamicColumns.filter((x) => x.key === "issued")[0];
   if (issuedColumn !== undefined) {
@@ -89,25 +87,9 @@ function onRun(): boolean {
       // Issued values must not already be issued.
       return x.issued.toUpperCase() !== "Y";
     });
-
-    // Update the issued column using the payloads object.
-    const issuedRange = sheet.getRange(
-      2,
-      issuedColumn.column,
-      numberOfRows - 1
-    );
-    const values = issuedRange.getValues() as IGetValuesResult;
-    for (let i = 0; i < numberOfRows - 1; i++) {
-      const wasIssued = payloads.filter((y) => y.rowIndex === i)[0];
-      if (wasIssued !== undefined) {
-        values[i] = ["Y"];
-      }
-    }
-    issuedRange.setValues(values);
-    Logger.log("[onRun] Issued column was updated.");
-  } else {
-    Logger.log("[onRun] Tracking columns are not in use.");
   }
+
+  Logger.log("[onRun] Payloads populated successfully.");
 
   // Build the request headers.
   const headers = {
@@ -132,13 +114,61 @@ function onRun(): boolean {
   const responseCode = response.getResponseCode();
   Logger.log(`[onRun] Response code was ${responseCode}.`);
 
-  if (responseCode === 200) {
-    SpreadsheetApp.getUi().alert(`Sent ${payloads.length} event(s)`);
-    return true;
+  // Handle response error by logging result and displaying an error alert.
+  if (responseCode !== 200) {
+    const responseText = response.getContentText();
+    Logger.log(`[onRun] Response body was ${responseText}`);
+    const errorMessage = getPrettyError(JSON.parse(responseText));
+    SpreadsheetApp.getUi().alert(errorMessage);
+    return false;
   }
 
-  Logger.log(`[onRun] Response body was ${response.getContentText()}`);
-  return false;
+  // If we need to update the issued column that should be done now.
+  if (issuedColumn !== undefined) {
+    // Get the range for the issued column.
+    const issuedRange = sheet.getRange(
+      2,
+      issuedColumn.column,
+      numberOfRows - 1
+    );
+    const values = issuedRange.getValues() as IGetValuesResult;
+
+    // Check whether the row was sent in the final payloads array and update it's value if it was sent.
+    for (let i = 0; i < numberOfRows - 1; i++) {
+      const wasIssued = payloads.filter((y) => y.rowIndex === i)[0];
+      if (wasIssued !== undefined) {
+        values[i] = ["Y"];
+      }
+    }
+    // Execute the update.
+    issuedRange.setValues(values);
+    Logger.log("[onRun] Issued column was updated.");
+  }
+
+  SpreadsheetApp.getUi().alert(
+    `Sent ${payloads.length} row${payloads.length > 1 ? "s" : ""}.`
+  );
+  return true;
+}
+
+/**
+ * Returns a nicely formatted error message.
+ * @param {IApiResponseErrorModel} res
+ * @returns
+ */
+function getPrettyError(res: IApiResponseErrorModel) {
+  const { message, errors } = res;
+  let info = `An error occurred: ${message}`;
+  if (errors !== undefined && errors.length > 0) {
+    info += "\n\n";
+    errors.forEach((x) => {
+      info += `Property: ${x.property}`;
+      info += "\n";
+      info += `Reason: ${x.message}`;
+      info += "\n\n";
+    });
+  }
+  return info;
 }
 
 /**
@@ -263,6 +293,7 @@ function showSettingsSidebar(): void {
     defaultProps,
     savedProps
   );
+
   Logger.log(
     `[showSettingsSidebar] Default properties overwritten by user properties.`
   );
