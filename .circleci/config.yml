@@ -66,9 +66,9 @@ jobs:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
       - run: 'npm run build'
-      - run: 'npm run pre-package -- {{ .BuildNum }}'
-      - run: 'npm run package'
-      - run: 'npm run deploy'
+      - run: 'node ./scripts/pre-package {{ .BuildNum }}'
+      - run: 'node ./scripts/package'
+      - run: 'node ./scripts/deploy'
       - store_artifacts:
           path: 'dist'
 workflows:
