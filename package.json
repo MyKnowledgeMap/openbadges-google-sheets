@@ -12,7 +12,7 @@
     "lint": "tslint --project \".\"",
     "lint:ci":
       "tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit",
-    "prepackage": "node ./scripts/pre-package",
+    "pre-package": "node ./scripts/pre-package",
     "package": "node ./scripts/package",
     "deploy": "node ./scripts/deploy"
   },

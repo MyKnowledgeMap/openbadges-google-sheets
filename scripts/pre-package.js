@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const name = "sheets";
-const userDefinedVersion = process.argv[3];
+const userDefinedVersion = process.argv[2];
 
 const manifestFile = `./chrome/${name.toLowerCase()}/manifest.json`;
 const manifest = JSON.parse(fs.readFileSync(manifestFile));
