@@ -19,3 +19,21 @@ interface ICreateActivityEvent {
   issued: string;
   rowIndex: number;
 }
+
+/**
+ * The full api response error model.
+ * @interface IApiResponseErrorModel
+ */
+interface IApiResponseErrorModel {
+  message: string;
+  errors?: IApiResponseError[];
+}
+
+/**
+ * The api response error object.
+ * @interface IApiResponseError
+ */
+interface IApiResponseError {
+  property: string;
+  message: string;
+}
