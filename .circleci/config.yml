@@ -8,6 +8,8 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - restore_cache:
           keys:
             - 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
@@ -24,6 +26,8 @@ jobs:
       JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
@@ -38,6 +42,8 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
