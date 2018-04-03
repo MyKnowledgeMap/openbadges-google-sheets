@@ -10,11 +10,12 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - 'dependencies-v1-{{ checksum "package.json" }}'
+            - 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
+            - 'dependencies-v1-{{ .Branch }}-'
             - 'dependencies-v1-'
       - run: 'npm install'
       - save_cache:
-          key: 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
           paths:
             - 'node_modules'
   test:
@@ -24,7 +25,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
       - run: 'mkdir -p reports/{jest,tslint}'
       - run: 'npm run lint:ci'
@@ -38,7 +39,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
       - run: 'npm run build'
       - store_artifacts:
@@ -51,14 +52,12 @@ jobs:
     <<: *defaults
     parallelism: 1
     steps:
+      - checkout
       - attach_workspace:
           at: /home/circleci
-      - checkout
       - restore_cache:
-          key: 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
-      - restore_cache:
-          key: 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'node ./scripts/pre-package'
       - run: 'node ./scripts/package'
       - run: 'node ./scripts/deploy'
