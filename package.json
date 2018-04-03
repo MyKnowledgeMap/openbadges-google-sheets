@@ -1,5 +1,5 @@
 {
-  "name": "@myknowledgemap/openbadges-google-script",
+  "name": "@myknowledgemap/openbadges-google-sheets",
   "version": "1.0.0",
   "description": "Add-on for Google Sheets with OpenBadges.me",
   "scripts": {
