@@ -1,8 +1,7 @@
 {
-  "name": "@myknowledgemap/openbadges-google-apps-script",
+  "name": "@myknowledgemap/openbadges-google-script",
   "version": "1.0.0",
-  "description": "Integrations for Google Sheets & Forms with OpenBadges.me",
-  "repository": "github:harrymitchinson/openbadges-google-apps-script",
+  "description": "Add-on for Google Sheets with OpenBadges.me",
   "scripts": {
     "precommit": "lint-staged",
     "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
@@ -12,7 +11,6 @@
     "lint": "tslint --project \".\"",
     "lint:ci":
       "tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit",
-    "pre-package": "node ./scripts/pre-package",
     "package": "node ./scripts/package",
     "deploy": "node ./scripts/deploy"
   },

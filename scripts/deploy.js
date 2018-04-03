@@ -6,7 +6,6 @@ const webStore = require("chrome-webstore-upload")({
   clientSecret: process.env.GOOGLE_CLIENTSECRET,
   refreshToken: process.env.GOOGLE_REFRESHTOKEN
 });
-
 const name = "sheets";
 
 // Final package will be here
