@@ -1,98 +1,92 @@
-defaults:
-  docker: &node-container
-    - image: 'circleci/node:8.9.4'
 version: 2
+
+defaults: &defaults
+  working_directory: /home/circleci/ob-forms
+  docker:
+    - image: 'circleci/node:8.9.4'
+
 jobs:
-  checkout-source:
-    docker: *node-container
+  install_dependencies:
+    <<: *defaults
     steps:
-      - checkout
-      - save_cache:
-          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
-          paths:
-            - '.git'
-  install-dependencies:
-    docker: *node-container
-    steps:
-      - restore_cache:
-          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
       - checkout
       - restore_cache:
           keys:
-            - 'dependencies-v1-{{ .Branch }}-'
+            - 'dependencies-v1-{{ checksum "package.json" }}'
             - 'dependencies-v1-'
-      - run: 'npm install'
+      - run:
+          name: Install dependencies
+          command: 'npm install'
       - save_cache:
-          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
+          key: 'dependencies-v1-{{ checksum "package.json" }}'
           paths:
-            - 'node_modules'
+            - node_modules
+
   test:
-    docker: *node-container
+    <<: *defaults
     environment:
       JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
-      - restore_cache:
-          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
-      - checkout
-      - restore_cache:
-          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
-      - run: 'npm install'
-      - run: 'mkdir -p reports/{jest,tslint}'
-      - run: 'npm run lint:ci'
-      - run: 'npm run test:ci'
+      - attach_workspace:
+          at: /home/circleci
+      - run: 
+          name: 'Create reports folder(s)'
+          command: 'mkdir -p reports/{jest,tslint}'
+      - run:
+          name: Run linter
+          command: 'npm run lint:ci'
+      - run:
+          name: Run tests
+          command: 'npm run test:ci'
       - store_test_results:
           path: 'reports'
       - store_artifacts:
           path: 'reports'
+
   build:
-    docker: *node-container
+    <<: *defaults
     steps:
-      - restore_cache:
-          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
-      - checkout
-      - restore_cache:
-          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
-      - run: 'npm install'
-      - run: 'npm run build'
+      - attach_workspace:
+          at: /home/circleci
+      - run: 
+          name: 'Run build'
+          command: 'npm run build'
       - store_artifacts:
-          path: 'dist'
-  build-and-deploy:
-    docker: *node-container
+          path: 'dist' 
+      - persist_to_workspace: 
+          root: /home/circleci
+          paths:
+            - ob-forms
+
+  deploy:
+    <<: *defaults
+    parallelism: 1
     steps:
-      - restore_cache:
-          key: 'source-v1-{{ .Branch }}-{{ .Revision }}'
-      - checkout
-      - restore_cache:
-          key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
-      - run: 'npm install'
-      - run: 'npm run build'
+      - attach_workspace:
+          at: /home/circleci
       - run: 'node ./scripts/pre-package'
       - run: 'node ./scripts/package'
       - run: 'node ./scripts/deploy'
       - store_artifacts:
           path: 'dist'
+
 workflows:
   version: 2
-  build-test-and-deploy:
+  ob-forms:
     jobs:
-      - checkout-source
-      - install-dependencies:
-          requires:
-            - 'checkout-source'
+      - install_dependencies
       - test:
           requires:
-            - 'install-dependencies'
+            - 'install_dependencies'
       - build:
           requires:
-            - 'test'
-          filters:
-            branches:
-              ignore:
-                - master
-      - build-and-deploy:
+            - 'install_dependencies'
+      - deploy:
           requires:
             - 'test'
+            - 'build'
           filters:
             branches:
               only:
-                - master
+                - 'master'
+                - 'circleci-workflow'
