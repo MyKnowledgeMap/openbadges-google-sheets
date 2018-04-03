@@ -24,8 +24,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'npm install'
       - run: 'mkdir -p reports/{jest,tslint}'
       - run: 'npm run lint:ci'
@@ -39,8 +38,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - 'dependencies-v1-{{ checksum "package.json" }}'
+          key: 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'npm install'
       - run: 'npm run build'
       - store_artifacts:
@@ -48,13 +46,19 @@ jobs:
       - persist_to_workspace: 
           root: /home/circleci
           paths:
-            - 'project'
+            - 'project/dist'
   deploy:
     <<: *defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /home/circleci
+      - checkout
+      - restore_cache:
+          key: 'dependencies-v1-{{ checksum "package.json" }}'
+      - run: 'npm install'
+      - restore_cache:
+          key: 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'node ./scripts/pre-package'
       - run: 'node ./scripts/package'
       - run: 'node ./scripts/deploy'
@@ -79,3 +83,4 @@ workflows:
             branches:
               only:
                 - 'master'
+                - 'circle-ci-persist-workspace'
