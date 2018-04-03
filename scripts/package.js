@@ -1,6 +1,6 @@
 const fs = require("fs");
 const archiver = require("archiver");
-const name = "forms";
+const name = "sheets";
 
 // Fetch the manifest file.
 const manifestFile = `./chrome/manifest.json`;

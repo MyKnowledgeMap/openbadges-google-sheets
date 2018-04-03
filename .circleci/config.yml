@@ -42,6 +42,7 @@ jobs:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
       - run: 'npm run build'
+      - run: 'node ./scripts/package'
       - store_artifacts:
           path: 'dist' 
       - persist_to_workspace: 
@@ -58,7 +59,6 @@ jobs:
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
-      - run: 'node ./scripts/package'
       - run: 'node ./scripts/deploy'
       - store_artifacts:
           path: 'dist'
