@@ -27,8 +27,11 @@ jobs:
     environment:
       JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
-      - attach_workspace:
-          at: /home/circleci
+      - checkout
+      - restore_cache:
+          keys:
+            - 'dependencies-v1-{{ checksum "package.json" }}'
+      - run: 'npm install'
       - run: 
           name: 'Create reports folder(s)'
           command: 'mkdir -p reports/{jest,tslint}'
@@ -46,8 +49,10 @@ jobs:
   build:
     <<: *defaults
     steps:
-      - attach_workspace:
-          at: /home/circleci
+      - restore_cache:
+          keys:
+            - 'dependencies-v1-{{ checksum "package.json" }}'
+      - run: 'npm install'
       - run: 
           name: 'Run build'
           command: 'npm run build'
