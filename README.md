@@ -1,10 +1,8 @@
 # OpenBadges.me Google Apps Script
 
-[![CircleCI](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script.svg?style=svg)](https://circleci.com/gh/harrymitchinson/openbadges-google-apps-script) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-apps-script/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-apps-script?branch=coveralls)
+[![CircleCI](https://circleci.com/gh/harrymitchinson/openbadges-google-sheets.svg?style=svg)](https://circleci.com/gh/harrymitchinson/openbadges-google-sheets) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-sheets/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-sheets?branch=coveralls)
 
-Google Apps Scripts for OpenBadges.me containing add-ons for Google Forms and Google Sheets.
-
-
+Google Apps Scripts for OpenBadges.me containing add-on for Google Sheets.
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
@@ -17,12 +15,10 @@ Google Apps Scripts for OpenBadges.me containing add-ons for Google Forms and Go
 * [Build your own](#build-your-own)
 * [Google Apps Script limitations](#google-apps-script-limitations)
 	* [Triggers](#triggers)
-	* [ES6+ / Typescript](#es6-typescript)
+	* [Modern Javascript and Typescript](#modern-javascript-and-typescript)
 	* [Quotas](#quotas)
 
 <!-- /code_chunk_output -->
-
-
 
 ## Summary
 
@@ -32,9 +28,13 @@ These add-ons can be used to create *activity events* which are simply records t
 
 This add-on allows you to create an activity event when a form has been completed.
 
+[View on GitHub](https://github.com/harrymitchinson/openbadges-google-forms)
+
 ### Sheets add-on
 
 This add-on allows you to create many activity events and is manually triggered and processed. The add-on can use tracking columns which requires rows to be verified before they are processed. 
+
+[View on GitHub](https://github.com/harrymitchinson/openbadges-google-sheets)
 
 ## How to install
 
@@ -69,7 +69,7 @@ This limitation can be seen in the Forms add-on which means you will have to ins
 
 If the add-on does not require access to triggers (or it will be manually triggered by the user) you should find that it is easier to develop and test. An example of this can be seen in the Sheets add-on which uses a manual trigger to start the processing.
 
-### ES6+ / Typescript
+### Modern Javascript and Typescript
 
 > Based on JavaScript 1.6 with some portions of 1.7 and 1.8 and provides subset of ECMAScript 5 API.
 > -- [*Google Apps Script on Wikipedia*](https://en.wikipedia.org/wiki/Google_Apps_Script)
