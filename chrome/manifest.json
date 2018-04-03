@@ -1,5 +1,14 @@
 {
-  "update_url": "https://clients2.google.com/service/update2/crx",
+  "manifest_version": 2,
+  "version": "1",
+  "name": "OpenBadges.me Sheets",
+  "shortName": "OB Sheets",
+  "description":
+    "Create records in bulk something has happened using your Google Sheet as a trigger and auditor",
+  "icons": {
+    "16": "script-icon_16.png",
+    "128": "script-icon_128.png"
+  },
   "container": ["GOOGLE_SPREADSHEET"],
   "app": {
     "background": {
@@ -12,12 +21,5 @@
     "container_id": "MFptP9c2vhFuOMs3iYNRGErxLzPCDsMJl",
     "container_version": "3"
   },
-  "manifest_version": 2,
-  "name": "OpenBadges.me Sheets",
-  "description": "Manage your badge issuing in bulk",
-  "icons": {
-    "16": "script-icon_16.png",
-    "128": "script-icon_128.png"
-  },
-  "version": "8.0.1"
+  "update_url": "https://clients2.google.com/service/update2/crx"
 }
