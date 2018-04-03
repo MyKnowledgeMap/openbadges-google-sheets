@@ -49,6 +49,7 @@ jobs:
   build:
     <<: *defaults
     steps:
+      - checkout
       - restore_cache:
           keys:
             - 'dependencies-v1-{{ checksum "package.json" }}'
