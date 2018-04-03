@@ -20,7 +20,6 @@ jobs:
             - 'node_modules'
   test:
     <<: *defaults
-    parallelism: 2
     environment:
       JEST_JUNIT_OUTPUT: 'reports/jest/jest-results.xml'
     steps:
