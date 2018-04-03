@@ -30,4 +30,5 @@ archive.directory(`./chrome/${name.toLowerCase()}/`, false);
 
 // Finalize the archive.
 archive.finalize();
+
 console.log("Packaged successfully.");
