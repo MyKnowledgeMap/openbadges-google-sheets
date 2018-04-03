@@ -1,10 +1,8 @@
 version: 2
-
 defaults: &defaults
-  working_directory: /home/circleci/ob-forms
+  working_directory: /home/circleci/project
   docker:
     - image: 'circleci/node:8.9.4'
-
 jobs:
   install_dependencies:
     <<: *defaults
@@ -14,14 +12,11 @@ jobs:
           keys:
             - 'dependencies-v1-{{ checksum "package.json" }}'
             - 'dependencies-v1-'
-      - run:
-          name: Install dependencies
-          command: 'npm install'
+      - run: 'npm install'
       - save_cache:
           key: 'dependencies-v1-{{ checksum "package.json" }}'
           paths:
-            - node_modules
-
+            - 'node_modules'
   test:
     <<: *defaults
     environment:
@@ -32,20 +27,13 @@ jobs:
           keys:
             - 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'npm install'
-      - run: 
-          name: 'Create reports folder(s)'
-          command: 'mkdir -p reports/{jest,tslint}'
-      - run:
-          name: Run linter
-          command: 'npm run lint:ci'
-      - run:
-          name: Run tests
-          command: 'npm run test:ci'
+      - run: 'mkdir -p reports/{jest,tslint}'
+      - run: 'npm run lint:ci'
+      - run: 'npm run test:ci'
       - store_test_results:
           path: 'reports'
       - store_artifacts:
           path: 'reports'
-
   build:
     <<: *defaults
     steps:
@@ -54,16 +42,13 @@ jobs:
           keys:
             - 'dependencies-v1-{{ checksum "package.json" }}'
       - run: 'npm install'
-      - run: 
-          name: 'Run build'
-          command: 'npm run build'
+      - run: 'npm run build'
       - store_artifacts:
           path: 'dist' 
       - persist_to_workspace: 
           root: /home/circleci
           paths:
-            - ob-forms
-
+            - 'project'
   deploy:
     <<: *defaults
     parallelism: 1
@@ -75,10 +60,9 @@ jobs:
       - run: 'node ./scripts/deploy'
       - store_artifacts:
           path: 'dist'
-
 workflows:
   version: 2
-  ob-forms:
+  build_test_deploy:
     jobs:
       - install_dependencies
       - test:
@@ -95,4 +79,3 @@ workflows:
             branches:
               only:
                 - 'master'
-                - 'circleci-workflow'
