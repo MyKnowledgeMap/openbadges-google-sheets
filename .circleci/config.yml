@@ -58,7 +58,6 @@ jobs:
       - restore_cache:
           key: 'dependencies-v1-{{ .Branch }}-{{ .Revision }}'
       - run: 'npm install'
-      - run: 'node ./scripts/pre-package'
       - run: 'node ./scripts/package'
       - run: 'node ./scripts/deploy'
       - store_artifacts:
