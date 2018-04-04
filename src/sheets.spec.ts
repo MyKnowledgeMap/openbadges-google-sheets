@@ -10,7 +10,7 @@ interface IGlobal {
 declare const global: IGlobal;
 
 describe("sheets", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     global.Logger = {
       log: jest.fn()
     } as any;

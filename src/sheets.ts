@@ -1,10 +1,5 @@
 import settingsSidebarTemplate from "./templates/sheets-settings.sidebar.html";
 
-// Regex for checking {{dynamic properties}}.
-const dynamicPropRgx = new RegExp(/{{.+}}/);
-// Regex for checking properties starting with api such as apiKey apiToken etc.
-const apiRgx = new RegExp(/(api)(\S+)/);
-
 /**
  * Adds the OpenBadges menu to the toolbar
  */
@@ -192,7 +187,7 @@ function convertLetterToNumber(letter: string): number {
  */
 function getDynamicColumns(props: ISheetsDocumentProperties) {
   return Object.keys(props)
-    .filter((key) => dynamicPropRgx.test(props[key]))
+    .filter((key) => /{{.+}}/.test(props[key]))
     .map((key) => {
       const value = props[key].replace(/[{}]/g, "").toUpperCase();
       const column = convertLetterToNumber(value);
@@ -248,7 +243,7 @@ function populateStaticPayloads(
   // Set the static properties on the payload objects.
   Object.keys(props)
     .map((key) => ({ key, value: props[key] }))
-    .filter((prop) => !apiRgx.test(prop.key))
+    .filter((prop) => !/(api)(\S+)/.test(prop.key))
     .forEach((prop) =>
       payloads
         .filter((payload) => payload[prop.key] === undefined)
@@ -270,7 +265,7 @@ function showSettingsSidebar(): void {
   const documentProperties = PropertiesService.getDocumentProperties();
   const savedProps = documentProperties.getProperties() as ISheetsDocumentProperties;
 
-  const defaultProps = {
+  const defaultProps: ISheetsDocumentProperties = {
     apiKey: "",
     apiUrl: "",
     apiToken: "",
@@ -288,11 +283,7 @@ function showSettingsSidebar(): void {
     issued: ""
   };
 
-  const props: ISheetsDocumentProperties = Object.assign(
-    {},
-    defaultProps,
-    savedProps
-  );
+  const props = Object.assign({}, defaultProps, savedProps);
 
   Logger.log(
     `[showSettingsSidebar] Default properties overwritten by user properties.`
