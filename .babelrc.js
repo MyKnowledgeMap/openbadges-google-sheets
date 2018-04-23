@@ -3,6 +3,7 @@ require("dotenv-safe").config();
 
 // The plugins to transform code.
 const plugins = [
+  ["@babel/plugin-transform-spread"],
   [require("babel-plugin-transform-object-assign")],
   [
     // Remove export statements since they throw erorrs in GAS.
@@ -31,7 +32,7 @@ const presets = [
 ];
 
 // The entry points to the addons.
-const only = ["./src/forms.ts", "./src/sheets.ts"];
+const only = ["./src/forms.ts"];
 
 module.exports = {
   presets,
