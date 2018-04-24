@@ -9,7 +9,375 @@ interface IGlobal {
 }
 declare const global: IGlobal;
 
-describe("sheets", () => {
+describe("Functions", () => {
+  describe("_addMenu", () => {
+    it("should add menu", () => {
+      // Arrange
+      const sheet = { addMenu: jest.fn() };
+      global.SpreadsheetApp = {
+        getActiveSpreadsheet: jest.fn().mockReturnValue(sheet)
+      } as any;
+
+      // Act
+      module._addMenu();
+
+      // Assert
+      expect(sheet.addMenu).toBeCalled();
+      expect(sheet.addMenu).toBeCalledWith(
+        expect.any(String),
+        expect.any(Array)
+      );
+    });
+  });
+  describe("_convertStringToNumber", () => {
+    // Arrange
+    const testCases = [
+      { input: "A", output: 1 },
+      { input: "B", output: 2 },
+      { input: "Z", output: 26 },
+      { input: "AA", output: 27 },
+      { input: "AZ", output: 52 }
+    ];
+
+    // Act => Assert
+    for (const { input, output } of testCases) {
+      it(`should return ${output} for ${input}`, () => {
+        expect(module._convertStringToNumber(input)).toBe(output);
+      });
+    }
+  });
+  describe("_getDynamicColumns", () => {
+    describe("when no dynamic", () => {
+      it("should return empty", () => {
+        expect(module._getDynamicColumns({} as any).length).toBe(0);
+      });
+    });
+    describe("when dynamic", () => {
+      // Arrange
+      const props = { text1: "{{B}}" } as any;
+
+      // Act
+      const result = module._getDynamicColumns(props);
+
+      it("should return all dynamic", () => {
+        expect(result.length).toBe(1);
+      });
+
+      it("should have column key as number", () => {
+        expect(result[0].column).toBe(2);
+      });
+
+      it("should have property key", () => {
+        expect(result[0].key).toBe("text1");
+      });
+
+      it("should have clean property value", () => {
+        expect(result[0].value).toBe("B");
+      });
+    });
+  });
+  describe("_getDynamicPayloads", () => {
+    // Arrange
+    const rows = [
+      ["a", "b", "c", "d"],
+      ["e", "f", "g", "h"]
+    ] as IGetValuesResult;
+    const range = {
+      getValues: jest.fn().mockReturnValue(rows)
+    };
+    const sheet = {
+      getRange: jest.fn().mockReturnValue(range),
+      getLastColumn: jest.fn(),
+      getLastRow: jest.fn()
+    } as any;
+    const props = {
+      email: "{{A}}",
+      text1: "{{B}}",
+      text2: "{{C}}"
+    } as any;
+    const payloadsFromProps = module._getDynamicPayloads(props);
+
+    // Act
+    const payloads = payloadsFromProps(sheet);
+
+    it("should return curried function", () => {
+      expect(typeof payloadsFromProps).toBe("function");
+    });
+
+    it("should return payloads for rows", () => {
+      expect(payloads.length).toBe(2);
+    });
+
+    it("should return payload with dynamic values", () => {
+      expect(payloads[0].email).toBe("a");
+      expect(payloads[0].text1).toBe("b");
+      expect(payloads[0].text2).toBe("c");
+      expect(payloads[1].email).toBe("e");
+      expect(payloads[1].text1).toBe("f");
+      expect(payloads[1].text2).toBe("g");
+    });
+  });
+  describe("_getModelsUsingRows", () => {
+    const columns = [
+      { column: 1, key: "email" },
+      { column: 2, key: "text1" },
+      { column: 3, key: "text2" }
+    ];
+    const modelBuilder = module._getModelsUsingRows(columns);
+    const cells = ["a", "b", "c", "d"];
+
+    const result = modelBuilder([], cells, 0);
+    it("should add model to array", () => {
+      expect(result.length).toBe(1);
+    });
+    it("should build model using column and key", () => {
+      expect(result[0].email).toBe("a");
+      expect(result[0].text1).toBe("b");
+      expect(result[0].text2).toBe("c");
+    });
+  });
+  describe("_getModelUsingCells", () => {
+    const date = new Date();
+    const columns = [
+      { column: 1, key: "text1" },
+      { column: 2, key: "text1" },
+      { column: 3, key: "text1" },
+      { column: 4, key: "text1" }
+    ];
+    const model = {} as any;
+    const modelBuilder = module._getModelUsingCells(columns);
+
+    const modelWithString = modelBuilder(model, "a", 0);
+    const modelWithNumber = modelBuilder(model, 1, 1);
+    const modelWithBoolean = modelBuilder(model, true, 2);
+    const modelWithDate = modelBuilder(model, date, 2);
+
+    it("should not mutate provided model", () => {
+      expect(model.text1).toBeUndefined();
+    });
+
+    it("should add string value", () => {
+      expect(modelWithString.text1).toBe("a");
+    });
+
+    it("should add number value", () => {
+      expect(modelWithNumber.text1).toBe("1");
+    });
+
+    it("should add boolean value", () => {
+      expect(modelWithBoolean.text1).toBe("true");
+    });
+
+    it("should add date value", () => {
+      expect(modelWithDate.text1).toBe(date.toUTCString());
+    });
+  });
+
+  describe("_getPayloads", () => {
+    // Arrange
+    const props = { email: "{{A}}", text1: "z" } as any;
+    const payloadBuilder = module._getPayloads(props);
+
+    const rows = [
+      ["a", "b", "c", "d"],
+      ["e", "f", "g", "h"]
+    ] as IGetValuesResult;
+    const range = {
+      getValues: jest.fn().mockReturnValue(rows)
+    };
+    const sheet = {
+      getRange: jest.fn().mockReturnValue(range),
+      getLastColumn: jest.fn(),
+      getLastRow: jest.fn()
+    } as any;
+
+    // Act
+    const payloads = payloadBuilder(sheet);
+
+    it("should return payload for each row", () => {
+      expect(payloads.length).toBe(2);
+    });
+    it("should use static properties", () => {
+      expect(payloads[0].text1).toBe("z");
+    });
+    it("should use dynamic properties", () => {
+      expect(payloads[0].email).toBe("a");
+      expect(payloads[1].email).toBe("e");
+    });
+  });
+
+  describe("_getPrettyError", () => {
+    const shortResponse: IApiResponseErrorModel = {
+      message: "error"
+    };
+    const longResponse: IApiResponseErrorModel = {
+      message: "error",
+      errors: [
+        {
+          property: "property",
+          message: "message"
+        }
+      ]
+    };
+    const short = module._getPrettyError(shortResponse);
+    const long = module._getPrettyError(longResponse);
+
+    it("should return errror message", () => {
+      expect(typeof short).toBe("string");
+      expect(typeof long).toBe("string");
+    });
+
+    it("should have more detailed message for detailed responses", () => {
+      expect(long.length).toBeGreaterThan(short.length);
+    });
+  });
+
+  describe("_isDynamicValue", () => {
+    it("should return false when not dynamic", () => {
+      expect(module._isDynamicValue(["text1", "a"])).toBe(false);
+    });
+    it("should return true when dynamic", () => {
+      expect(module._isDynamicValue(["text1", "{{a}}"])).toBe(true);
+    });
+  });
+
+  describe("_isEventIssued", () => {
+    it("should return false when issued is undefined", () => {
+      expect(module._isEventIssued({} as any)).toBe(false);
+    });
+    // Worth checking as not sure if GAS uses undefined or null for empty.
+    it("should return false when issued is null", () => {
+      expect(module._isEventIssued({ issued: null } as any)).toBe(false);
+    });
+    it("should return true when issued is lowercase y", () => {
+      expect(module._isEventIssued({ issued: "y" })).toBe(true);
+    });
+    it("should return true when issued is uppercase y", () => {
+      expect(module._isEventIssued({ issued: "Y" })).toBe(true);
+    });
+  });
+
+  describe("_isEventVerified", () => {
+    it("should return false when issued is undefined", () => {
+      expect(module._isEventVerified({} as any)).toBe(false);
+    });
+    // Worth checking as not sure if GAS uses undefined or null for empty.
+    it("should return false when issued is null", () => {
+      expect(module._isEventVerified({ verified: null } as any)).toBe(false);
+    });
+    it("should return true when issued is lowercase y", () => {
+      expect(module._isEventVerified({ verified: "y" })).toBe(true);
+    });
+    it("should return true when issued is uppercase y", () => {
+      expect(module._isEventVerified({ verified: "Y" })).toBe(true);
+    });
+  });
+
+  describe("_objectEntries", () => {
+    it("should return array of arrays containing key and value", () => {
+      const obj = {
+        key: "value"
+      };
+      const result = module._objectEntries(obj);
+      expect(result[0][0]).toBe("key");
+      expect(result[0][1]).toBe("value");
+    });
+  });
+
+  describe("_objectEntries", () => {
+    it("should return array of values", () => {
+      const obj = {
+        key: "value"
+      };
+      const result = module._objectValues(obj);
+      expect(result[0]).toBe("value");
+    });
+  });
+
+  describe("_toDynamicColumn", () => {
+    const input: any = ["text1", "{{A}}"];
+    const result = module._toDynamicColumn(input);
+    it("should remove brackets from value", () => {
+      expect(result.value).toBe("A");
+    });
+    it("should contain column number", () => {
+      expect(result.column).toBe(1);
+    });
+    it("should return key for model", () => {
+      expect(result.key).toBe(input[0]);
+    });
+  });
+
+  describe("_updateIssuedColumnForSheet", () => {
+    const values = [[undefined], [null], [""], ["N"], ["Y"], ["N"]];
+    const range = {
+      getValues: jest.fn().mockReturnValue(values),
+      setValues: jest.fn()
+    };
+    const sheet = {
+      getLastRow: jest.fn(),
+      getRange: jest.fn().mockReturnValue(range)
+    } as any;
+    const payloads = [{ rowIndex: 1 }, { rowIndex: 2 }, { rowIndex: 3 }] as any;
+    const updateBuilder = module._updateIssuedColumnForSheet(sheet)({
+      column: 1
+    });
+
+    // Act
+    updateBuilder(payloads);
+
+    const call = range.setValues.mock.calls[0][0];
+
+    it("should not mutate values", () => {
+      expect(values[1][0]).toEqual(null);
+    });
+
+    it("should update matching row index values", () => {
+      expect(call[1]).toEqual(["Y"]);
+      expect(call[2]).toEqual(["Y"]);
+      expect(call[3]).toEqual(["Y"]);
+    });
+
+    it("should not update non matching row index values", () => {
+      expect(call[0]).toEqual([undefined]);
+      expect(call[5]).toEqual(["N"]);
+    });
+  });
+
+  describe("_withStaticData", () => {
+    const props = {
+      apiKey: "a",
+      text1: "b",
+      text2: "c"
+    } as any;
+    const payloadBuilder = module._withStaticData(props);
+
+    const payload = {
+      text1: "exists"
+    } as any;
+
+    const result = payloadBuilder(payload);
+
+    it("should not mutate provided payload", () => {
+      expect(payload.text2).toBeUndefined();
+      expect(result).not.toBe(payload);
+    });
+
+    it("should ignore api prefixed keys", () => {
+      expect((result as any).apiKey).toBeUndefined();
+    });
+
+    it("should ignore existing values", () => {
+      expect(result.text1).toBe("exists");
+    });
+
+    it("should update values using props", () => {
+      expect(result.text2).toBe("c");
+    });
+  });
+});
+
+describe("Triggers & Events", () => {
   beforeEach(() => {
     global.Logger = {
       log: jest.fn()
@@ -137,9 +505,9 @@ describe("sheets", () => {
     let range: GoogleAppsScript.Spreadsheet.Range;
     const ui = { alert: jest.fn() };
     // Setup the spreadsheet mock.
-    const setupSpreadsheet = (values: any[]) => {
+    const setupSpreadsheet = (values: any[][]) => {
       range = {
-        getValues: jest.fn().mockReturnValue([values]),
+        getValues: jest.fn().mockReturnValue(values),
         setValues: jest.fn()
       } as any;
       const sheet: GoogleAppsScript.Spreadsheet.Sheet = {
@@ -175,11 +543,25 @@ describe("sheets", () => {
       } as any;
     };
 
+    describe("when verified and issued are not used", () => {
+      it("should not update sheet", () => {
+        // Arrange
+        const values = [["Y", ""]];
+        setupSpreadsheet(values);
+        setupProperties({});
+        setupUrlFetch(200);
+        // Act
+        module.onRun();
+        // Assert
+        expect(range.setValues).not.toBeCalled();
+      });
+    });
+
     describe("when verified and issued are used", () => {
       describe("when is verified and issued is falsy", () => {
         it("should update issued column", () => {
           // Arrange
-          const values = ["Y", ""];
+          const values = [["Y", ""]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
@@ -192,7 +574,7 @@ describe("sheets", () => {
       describe("when is verified and not issued", () => {
         it("should update issued column", () => {
           // Arrange
-          const values = ["Y", "N"];
+          const values = [["Y", "N"]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
@@ -205,34 +587,34 @@ describe("sheets", () => {
       describe("when is verified and issued", () => {
         it("should not update issued column", () => {
           // Arrange
-          const values = ["Y", "Y"];
+          const values = [["Y", "Y"]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
           // Act
           module.onRun();
           // Assert
-          expect(range.setValues).toBeCalledWith([values]);
+          expect(range.setValues).toBeCalledWith(values);
         });
       });
     });
 
     describe("when request is successful", () => {
-      it("should return true", () => {
+      it("should display success alert", () => {
         // Arrange
-        setupSpreadsheet([]);
-        setupProperties({});
+        const values = [["Y", ""], ["Y", ""]];
+        setupSpreadsheet(values);
+        setupProperties({ verified: "{{A}}", issued: "{{B}}" });
         setupUrlFetch(200);
         // Act
-        const result = module.onRun();
+        module.onRun();
         // Assert
-        expect(result).toBe(true);
+        expect(ui.alert).toBeCalledWith(expect.stringMatching("Sent 2 rows."));
       });
     });
 
     describe("when request is not successful", () => {
       describe("when response body has additional errors", () => {
-        let result: boolean;
         const body = {
           message: "test",
           errors: [{ property: "int1", message: "not int" }]
@@ -243,9 +625,8 @@ describe("sheets", () => {
           setupProperties({});
           setupUrlFetch(500, JSON.stringify(body));
           // Act
-          result = module.onRun();
+          module.onRun();
         });
-        it("should return false", () => expect(result).toBe(false));
         it("should display error message", () =>
           expect(ui.alert).toBeCalledWith(
             expect.stringContaining(body.message)
@@ -256,7 +637,6 @@ describe("sheets", () => {
           ));
       });
       describe("when response body has no additional errors", () => {
-        let result: boolean;
         const body = {
           message: "test"
         };
@@ -266,242 +646,13 @@ describe("sheets", () => {
           setupProperties({});
           setupUrlFetch(500, JSON.stringify(body));
           // Act
-          result = module.onRun();
+          module.onRun();
         });
-        it("should return false", () => expect(result).toBe(false));
         it("should display error message", () =>
           expect(ui.alert).toBeCalledWith(
             expect.stringContaining(body.message)
           ));
       });
-    });
-  });
-
-  describe("populateStaticPayloads", () => {
-    describe("when key has api prefix", () => {
-      it("should ignore property", () => {
-        // Arrange
-        const props = {
-          apiKey: "1234567890"
-        } as ISheetsDocumentProperties;
-
-        const payloads = [{}] as ICreateActivityEvent[];
-
-        // Act
-        module.populateStaticPayloads(props, payloads);
-
-        // Assert
-        expect((payloads[0] as any).apiKey).toBeUndefined();
-      });
-    });
-
-    describe("when key is already in use", () => {
-      it("should ignore property", () => {
-        // Arrange
-        const props = {
-          firstName: "Joe"
-        } as ISheetsDocumentProperties;
-
-        const payloads = [{ firstName: "Bob" }] as ICreateActivityEvent[];
-
-        // Act
-        module.populateStaticPayloads(props, payloads);
-
-        // Assert
-        expect(payloads[0].firstName).not.toBe(props.firstName);
-      });
-    });
-
-    describe("when key is not already in use", () => {
-      it("should use property", () => {
-        // Arrange
-        const props = {
-          firstName: "Joe"
-        } as ISheetsDocumentProperties;
-
-        const payloads = [{}] as ICreateActivityEvent[];
-
-        // Act
-        module.populateStaticPayloads(props, payloads);
-
-        // Assert
-        expect(payloads[0].firstName).toBe(props.firstName);
-      });
-    });
-  });
-
-  describe("populateDynamicPayloads", () => {
-    describe("when value not using template", () => {
-      it("should ignore property", () => {
-        // Arrange
-        const props = {
-          firstName: "{invalid}",
-          lastName: "Bloggs"
-        } as ISheetsDocumentProperties;
-
-        const payloads = [{}] as ICreateActivityEvent[];
-
-        const range: GoogleAppsScript.Spreadsheet.Range = {
-          getValues: jest.fn().mockReturnValue([[]])
-        } as any;
-        const sheet = {
-          getLastRow: () => 2,
-          getLastColumn: () => 2,
-          getRange: () => range
-        } as any;
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].firstName).toBeUndefined();
-      });
-    });
-
-    describe("when value using template with no matching column", () => {
-      let value: number | string | boolean | Date;
-      let payloads: ICreateActivityEvent[];
-      let props: ISheetsDocumentProperties;
-      let sheet: GoogleAppsScript.Spreadsheet.Sheet;
-
-      // Setup the sheet mock with the provided value.
-      const setupSheet = (v: number | string | boolean | Date) => {
-        value = v;
-        const range = {
-          getValues: jest.fn().mockReturnValue([[value]])
-        };
-        sheet = {
-          getLastRow: () => 2,
-          getLastColumn: () => 2,
-          getRange: jest.fn().mockReturnValue(range)
-        } as any;
-      };
-
-      beforeAll(() => {
-        props = {
-          text1: "{{B}}"
-        } as any;
-        payloads = [{}] as any;
-      });
-
-      it("should ignore dynamic value", () => {
-        // Arrange
-        setupSheet("test");
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].text1).not.toBe(value.toString());
-      });
-    });
-
-    describe("when value using template with matching column", () => {
-      let value: number | string | boolean | Date;
-      let payloads: ICreateActivityEvent[];
-      let props: ISheetsDocumentProperties;
-      let sheet: GoogleAppsScript.Spreadsheet.Sheet;
-
-      // Setup the sheet mock with the provided value.
-      const setupSheet = (v: number | string | boolean | Date) => {
-        value = v;
-        const range = {
-          getValues: jest.fn().mockReturnValue([[value]])
-        };
-        sheet = {
-          getLastRow: () => 2,
-          getLastColumn: () => 2,
-          getRange: jest.fn().mockReturnValue(range)
-        } as any;
-      };
-
-      beforeAll(() => {
-        props = {
-          text1: "{{A}}"
-        } as any;
-        payloads = [{}] as any;
-      });
-
-      it("should toUTCString dynamic value if type is date", () => {
-        // Arrange
-        setupSheet(new Date());
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].text1).toBe((value as Date).toUTCString());
-      });
-
-      it("should toString dynamic value if type is boolean", () => {
-        // Arrange
-        setupSheet(true);
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].text1).toBe(value.toString());
-      });
-
-      it("should toString dynamic value if type is number", () => {
-        // Arrange
-        setupSheet(50);
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].text1).toBe(value.toString());
-      });
-
-      it("should toString dynamic value if type is string", () => {
-        // Arrange
-        setupSheet("test");
-
-        // Act
-        module.populateDynamicPayloads(props, payloads, sheet);
-
-        // Assert
-        expect(payloads[0].text1).toBe(value.toString());
-      });
-    });
-  });
-
-  describe("getDynamicColumns", () => {
-    describe("when props are not dynamic", () => {
-      it("should return empty array", () => {
-        // Arrange
-        const props: ISheetsDocumentProperties = {
-          firstName: "not dynamic",
-          lastName: "another value",
-          text1: "{still not dynamic}"
-        } as any;
-
-        // Act
-        const result = module.getDynamicColumns(props);
-
-        // Assert
-        expect(result.length).toBe(0);
-      });
-    });
-
-    describe("when props are dynamic", () => {
-      // Arrange
-      const props: ISheetsDocumentProperties = {
-        firstName: "{{A}}",
-        lastName: "{{B}}",
-        text1: "not dynamic"
-      } as any;
-
-      // Act
-      const result = module.getDynamicColumns(props);
-
-      // Assert
-      it("should return array of dynamic properties", () =>
-        expect(result.length).toBe(2));
-      it("should strip dynamic template from value", () =>
-        expect(result[0].value).toBe("A"));
     });
   });
 });
