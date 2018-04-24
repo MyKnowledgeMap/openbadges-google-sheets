@@ -32,7 +32,7 @@ const presets = [
 ];
 
 // The entry points to the addons.
-const only = ["./src/forms.ts"];
+const only = ["./src/sheets.ts"];
 
 module.exports = {
   presets,
