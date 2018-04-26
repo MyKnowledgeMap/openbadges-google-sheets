@@ -103,10 +103,8 @@ const _addMenu = () =>
  * @returns
  */
 const _appendError = (message: string, error: IApiResponseError) => {
-  message += `
-    Property: ${error.property}\n
-    Reason: ${error.message}\n\n
-  `;
+  message += `Property: ${error.property}\n`;
+  message += `Reason: ${error.message}\n\n`;
   return message;
 };
 
