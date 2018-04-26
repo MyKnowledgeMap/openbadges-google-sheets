@@ -35,15 +35,19 @@ const MENU = [
  * Object.values shim
  * @param {{ [key: string]: any }} input
  */
-const _objectValues = (input: { [key: string]: any }) =>
-  Object.keys(input).map((key) => input[key]);
+function _objectValues(input: { [key: string]: any }) {
+  return Object.keys(input).map((key) => input[key]);
+}
 
 /**
  * Object.entries shim
  * @param {{ [key: string]: any }} input
  */
-const _objectEntries = (input: { [key: string]: any }) =>
-  Object.keys(input).map((key) => [key, input[key]]) as Array<[string, any]>;
+function _objectEntries(input: { [key: string]: any }) {
+  return Object.keys(input).map((key) => [key, input[key]]) as Array<
+    [string, any]
+  >;
+}
 
 /**
  * Returns the value if truthy or returns the provided init value.
@@ -51,50 +55,56 @@ const _objectEntries = (input: { [key: string]: any }) =>
  * @param {T} input
  * @param {T} init
  */
-const _valueOrDefault = <T extends {}>(input: T, init: T) =>
-  !input ? init : input;
+function _valueOrDefault<T>(input: T, init: T) {
+  return !input ? init : input;
+}
 
 /**
  * Convert a string to numbers using the character code for each letter.
  * https://stackoverflow.com/a/29040784/6387935 🙌
- * @param {string} letters
+ * @param {string} input
  */
-const _convertStringToNumber = (letters: string) =>
-  letters
+function _convertStringToNumber(input: string) {
+  return input
     .split("")
     .reduce(
-      (acc: number, curr: string, index: number, arr: string[]) =>
-        acc + (curr.charCodeAt(0) - 64) * Math.pow(26, arr.length - index - 1),
+      (total, letter, index, array) =>
+        total +
+        (letter.charCodeAt(0) - 64) * Math.pow(26, array.length - index - 1),
       0
     );
+}
 
 /**
  * Update the issued column for any rows which were sent to the API.
  * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
  */
-const _updateIssuedColumnForSheet = (
+function _updateIssuedColumnForSheet(
   sheet: GoogleAppsScript.Spreadsheet.Sheet
-) => (payloads: ICreateActivityEvent[]) => (issuedColumn: {
-  column: number;
-}) => {
-  const numberOfRows = sheet.getLastRow();
-  // Get the range for the issued column.
-  const range = sheet.getRange(2, issuedColumn.column, numberOfRows - 1);
-  const values = range.getValues();
+) {
+  return (payloads: ICreateActivityEvent[]) => (issuedColumn: {
+    column: number;
+  }) => {
+    const numberOfRows = sheet.getLastRow();
+    // Get the range for the issued column.
+    const range = sheet.getRange(2, issuedColumn.column, numberOfRows - 1);
+    const values = range.getValues();
 
-  // Create the update from the existing values.
-  const newValues = [...values];
-  payloads.map((x) => x.rowIndex).forEach((i) => (newValues[i] = ["Y"]));
+    // Create the update from the existing values.
+    const newValues = [...values];
+    payloads.map((x) => x.rowIndex).forEach((i) => (newValues[i] = ["Y"]));
 
-  // Execute the update.
-  range.setValues(newValues);
-};
+    // Execute the update.
+    range.setValues(newValues);
+  };
+}
 
 /**
  * Add the menu to the active spreadsheet.
  */
-const _addMenu = () =>
+function _addMenu() {
   SpreadsheetApp.getActiveSpreadsheet()!.addMenu("OpenBadges", MENU);
+}
 
 /**
  * Add to the error message using the error model.
@@ -102,145 +112,148 @@ const _addMenu = () =>
  * @param {IApiResponseError} error
  * @returns
  */
-const _appendError = (message: string, error: IApiResponseError) => {
+function _appendError(message: string, error: IApiResponseError) {
   message += `Property: ${error.property}\n`;
   message += `Reason: ${error.message}\n\n`;
   return message;
-};
+}
 
 /**
  * Create a nicely formatted error message.
  * @param {IApiResponseErrorModel} response
  * @returns
  */
-const _getPrettyError = (response: IApiResponseErrorModel) => {
+function _getPrettyError(response: IApiResponseErrorModel) {
   const { message, errors } = { ...response };
   return _valueOrDefault(errors!, []).reduce(
     _appendError,
     `An error occurred: ${message}\n\n`
   );
-};
-
-/**
- * Check whether the value is dynamic.
- * @param {[string, any]} [key, value]
- */
-const _isDynamicValue = ([key, value]: [string, any]) => /{{.+}}/.test(value);
+}
 
 /**
  * Create a representation of a dynamic column object with values for key, value and column number.
  * @param {[string, any]} [key, value]
  */
-const _toDynamicColumn = ([key, valueWithBrackets]: [string, any]) => {
+function _toDynamicColumn([key, valueWithBrackets]: [string, any]) {
   const value = valueWithBrackets.replace(/[{}]/g, "").toUpperCase();
   return {
     key,
     value,
     column: _convertStringToNumber(value)
   };
-};
+}
 
 /**
  * Build a model for a row using the dynamic columns.
  * @param {Array<{ column: number; key: string }>} columns
  */
-const _getModelUsingCells = (
-  columns: Array<{ column: number; key: string }>
-) => (
-  acc: ICreateActivityEvent,
-  cell: string | number | boolean | Date,
-  index: number
-) => {
-  const model = { ...acc };
-  const column = columns.filter((x) => x.column - 1 === index);
-  const value = cell instanceof Date ? cell.toUTCString() : cell.toString();
-  column.forEach((c) => (model[c.key] = value));
-  return model;
-};
+function _getModelUsingCells(columns: Array<{ column: number; key: string }>) {
+  return (
+    previous: ICreateActivityEvent,
+    cell: string | number | boolean | Date,
+    index: number
+  ) => {
+    const model = { ...previous };
+    const column = columns.filter((x) => x.column - 1 === index);
+    const value = cell instanceof Date ? cell.toUTCString() : cell.toString();
+    column.forEach((c) => (model[c.key] = value));
+    return model;
+  };
+}
 
 /**
  * Build all the models for a sheet using the dyanmic columns.
  * @param {Array<{ column: number; key: string }>} columns
  */
-const _getModelsUsingRows = (
-  columns: Array<{ column: number; key: string }>
-) => (
-  models: ICreateActivityEvent[],
-  cells: Array<string | number | boolean | Date>,
-  index: number
-) => {
-  const model = cells.reduce(
-    _getModelUsingCells(columns),
-    {} as ICreateActivityEvent
-  );
-  model.rowIndex = index;
-  models[index] = model;
-  return models;
-};
+function _getModelsUsingRows(columns: Array<{ column: number; key: string }>) {
+  return (
+    previous: ICreateActivityEvent[],
+    cells: Array<string | number | boolean | Date>,
+    index: number
+  ) => {
+    const current = [...previous];
+    // Get the model for this row using the cells.
+    const model = cells.reduce(
+      _getModelUsingCells(columns),
+      {} as ICreateActivityEvent
+    );
+    // Set the row index.
+    model.rowIndex = index;
+    // Set the model to the index in array.
+    current[index] = model;
+    return current;
+  };
+}
 
 /**
  * Build the payloads using dynamic and static data from the sheet and props.
  * @param {ISheetsDocumentProperties} props
  */
-const _getPayloads = (props: ISheetsDocumentProperties) => (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
-) => _getDynamicPayloads(props)(sheet).map(_withStaticData(props));
+function _getPayloads(props: ISheetsDocumentProperties) {
+  return (sheet: GoogleAppsScript.Spreadsheet.Sheet) =>
+    _getDynamicPayloads(props)(sheet).map(_withStaticData(props));
+}
 
 /**
  * Populate the payloads with dynamic data from the sheet.
  * @param {ISheetsDocumentProperties} props
  * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
  */
-const _getDynamicPayloads = (props: ISheetsDocumentProperties) => (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
-) => {
-  const numberOfRows = sheet.getLastRow();
-  const numberOfColumns = sheet.getLastColumn();
-  const range = sheet.getRange(2, 1, numberOfRows - 1, numberOfColumns);
-  const rows = range.getValues() as IGetValuesResult;
-  const dynamicColumns = _getDynamicColumns(props);
-  return rows.reduce(_getModelsUsingRows(dynamicColumns), []);
-};
+function _getDynamicPayloads(props: ISheetsDocumentProperties) {
+  return (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+    const numberOfRows = sheet.getLastRow();
+    const numberOfColumns = sheet.getLastColumn();
+    const rows = sheet
+      .getRange(2, 1, numberOfRows - 1, numberOfColumns)
+      .getValues() as IGetValuesResult;
+    const dynamicColumns = _getDynamicColumns(props);
+    return rows.reduce(_getModelsUsingRows(dynamicColumns), []);
+  };
+}
 
 /**
- * Populate the payloads with static data from the properties.
+ * Populate the model with static data from the properties.
  * @param {ISheetsDocumentProperties} props
  */
-const _withStaticData = (props: ISheetsDocumentProperties) => (
-  payload: ICreateActivityEvent
-) => {
-  const updated: { [key: string]: any } = {};
-  _objectEntries(props)
-    .filter(([key, value]) => !/(api)(\S+)/.test(key))
-    .filter(([key, value]) => payload[key] === undefined)
-    .forEach(([key, value]) => (updated[key] = value));
-  return { ...payload, ...updated } as ICreateActivityEvent;
-};
+function _withStaticData(props: ISheetsDocumentProperties) {
+  return (model: ICreateActivityEvent) => {
+    const updated: { [key: string]: any } = {};
+    _objectEntries(props)
+      .filter(([key, value]) => !/(api)(\S+)/.test(key))
+      .filter(([key, value]) => model[key] === undefined)
+      .forEach(([key, value]) => (updated[key] = value));
+    return { ...model, ...updated } as ICreateActivityEvent;
+  };
+}
 
 /**
  * Gets the columns which have been set as dynamic from properties.
  * @param {ISheetsDocumentProperties} props
  */
-const _getDynamicColumns = (props: ISheetsDocumentProperties) =>
-  _objectEntries(props)
-    .filter(_isDynamicValue)
+function _getDynamicColumns(props: ISheetsDocumentProperties) {
+  return _objectEntries(props)
+    .filter(([key, value]: [string, any]) => /{{.+}}/.test(value))
     .map(_toDynamicColumn);
+}
 
 /**
- * Whether the object is verified or not.
- * @param {({ verified: string | undefined })} e
+ * Combine multiple predicates
+ * @template T
+ * @param {Array<Predicate<T>>} predicates
+ * @param {boolean} [inverse=false]
+ * @returns
  */
-const _isVerified = (e: { verified: string | undefined }) =>
-  !!e.verified && e.verified.toUpperCase() === "Y";
-
-/**
- * Whether the object is issued or not.
- * @param {({ issued: string | undefined })} e
- */
-const _isIssued = (e: { issued: string | undefined }) =>
-  !!e.issued && e.issued.toUpperCase() === "Y";
+function _and<T>(predicates: Array<Predicate<T>>, inverse: boolean = false) {
+  return (obj: T) => {
+    const result = predicates.every((predicate) => predicate(obj));
+    return inverse ? !result : result;
+  };
+}
+type Predicate<T> = (value: T) => boolean;
 
 export {
+  _and,
   _addMenu,
   _appendError,
   _convertStringToNumber,
@@ -250,9 +263,6 @@ export {
   _getModelUsingCells,
   _getPayloads,
   _getPrettyError,
-  _isDynamicValue,
-  _isIssued,
-  _isVerified,
   _objectEntries,
   _objectValues,
   _valueOrDefault,
@@ -311,13 +321,21 @@ function onRun(): void {
   // Remove any payloads using the tracking columns if they have not been verified.
   const verifiedColumn = trackingColumns.filter((x) => x.key === "verified");
   verifiedColumn.forEach(() => {
-    payloads = payloads.filter((x) => _isVerified(x));
+    const predicates: Array<Predicate<ICreateActivityEvent>> = [
+      (x) => !!x.verified,
+      (x) => x.verified.toUpperCase() === "Y"
+    ];
+    payloads = payloads.filter(_and(predicates));
   });
 
   // Remove any payloads using the tracking columns if they have already been issued.
   const issuedColumn = trackingColumns.filter((x) => x.key === "issued");
   issuedColumn.forEach(() => {
-    payloads = payloads.filter((x) => !_isIssued(x));
+    const predicates: Array<Predicate<ICreateActivityEvent>> = [
+      (x) => !x.issued,
+      (x) => x.issued.toUpperCase() !== "Y"
+    ];
+    payloads = payloads.filter(_and(predicates));
   });
 
   // Create the request object.
