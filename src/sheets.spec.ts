@@ -129,8 +129,11 @@ describe("Functions", () => {
     ];
     const modelBuilder = module._getModelsUsingRows(columns);
     const cells = ["a", "b", "c", "d"];
-
-    const result = modelBuilder([], cells, 0);
+    const input: any[] = [];
+    const result = modelBuilder(input, cells, 0);
+    it("should not mutate input", () => {
+      expect(input).not.toBe(result);
+    });
     it("should add model to array", () => {
       expect(result.length).toBe(1);
     });
@@ -237,51 +240,57 @@ describe("Functions", () => {
     });
   });
 
-  describe("_isDynamicValue", () => {
-    it("should return false when not dynamic", () => {
-      expect(module._isDynamicValue(["text1", "a"])).toBe(false);
-    });
-    it("should return true when dynamic", () => {
-      expect(module._isDynamicValue(["text1", "{{a}}"])).toBe(true);
-    });
-  });
+  describe("_and", () => {
+    const predicateTests: any[] = [
+      {
+        predicates: [(x: any) => x.issued === undefined],
+        obj: {},
+        inverse: false,
+        result: true
+      },
+      {
+        predicates: [(x: any) => x.issued === undefined],
+        obj: {},
+        inverse: true,
+        result: false
+      },
+      {
+        predicates: [(x: any) => x.issued === null],
+        obj: {},
+        inverse: false,
+        result: false
+      },
+      {
+        predicates: [(x: { issued: string }) => x.issued.toUpperCase() === "Y"],
+        obj: { issued: "y" },
+        inverse: false,
+        result: true
+      },
+      {
+        predicates: [(x: { issued: string }) => x.issued.toUpperCase() === "Y"],
+        obj: { issued: "Y" },
+        inverse: false,
+        result: true
+      },
+      {
+        predicates: [(x: { issued: string }) => x.issued.toUpperCase() === "Y"],
+        obj: { issued: "A" },
+        inverse: false,
+        result: false
+      }
+    ];
 
-  describe("_isIssued", () => {
-    it("should return false when issued is undefined", () => {
-      expect(module._isIssued({} as any)).toBe(false);
-    });
-    // Worth checking as not sure if GAS uses undefined or null for empty.
-    it("should return false when issued is null", () => {
-      expect(module._isIssued({ issued: null } as any)).toBe(false);
-    });
-    it("should return false when issued is letter other than y", () => {
-      expect(module._isIssued({ issued: "a" })).toBe(false);
-    });
-    it("should return true when issued is lowercase y", () => {
-      expect(module._isIssued({ issued: "y" })).toBe(true);
-    });
-    it(`should return true when issued is uppercase 'Y'`, () => {
-      expect(module._isIssued({ issued: "Y" })).toBe(true);
-    });
-  });
-
-  describe("_isVerified", () => {
-    it("should return false when verified is undefined", () => {
-      expect(module._isVerified({} as any)).toBe(false);
-    });
-    // Worth checking as not sure if GAS uses undefined or null for empty.
-    it("should return false when verified is null", () => {
-      expect(module._isVerified({ verified: null } as any)).toBe(false);
-    });
-    it("should return false when verified is letter other than y", () => {
-      expect(module._isVerified({ verified: "a" })).toBe(false);
-    });
-    it("should return true when verified is lowercase y", () => {
-      expect(module._isVerified({ verified: "y" })).toBe(true);
-    });
-    it("should return true when verified is uppercase y", () => {
-      expect(module._isVerified({ verified: "Y" })).toBe(true);
-    });
+    for (const [index, testCase] of predicateTests.entries()) {
+      const { predicates, obj, inverse, result } = testCase;
+      const name = `#${index + 1} should return ${JSON.stringify(
+        result
+      )} with ${
+        inverse ? "inverse " : ""
+      }predicate(s) on object ${JSON.stringify(obj)}`;
+      it(name, () => {
+        expect(module._and(predicates, inverse)(obj)).toBe(result);
+      });
+    }
   });
 
   describe("_objectEntries", () => {
