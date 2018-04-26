@@ -435,6 +435,27 @@ describe("Functions", () => {
       });
     }
   });
+
+  describe("_appendError", () => {
+    // Arrange
+    const input = "test";
+    const error: IApiResponseError = {
+      message: "12345",
+      property: "67890"
+    };
+
+    // Act
+    const result = module._appendError(input, error);
+
+    // Assert
+    it("should not mutate message", () => {
+      expect(result).not.toBe(input);
+    });
+    it("should return new message using error", () => {
+      expect(result).toContain("12345");
+      expect(result).toContain("67890");
+    });
+  });
 });
 
 describe("Triggers & Events", () => {
