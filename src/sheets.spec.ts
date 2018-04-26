@@ -29,6 +29,7 @@ describe("Functions", () => {
       );
     });
   });
+
   describe("_convertStringToNumber", () => {
     // Arrange
     const testCases = [
@@ -46,6 +47,7 @@ describe("Functions", () => {
       });
     }
   });
+
   describe("_getDynamicColumns", () => {
     describe("when no dynamic", () => {
       it("should return empty", () => {
@@ -76,6 +78,7 @@ describe("Functions", () => {
       });
     });
   });
+
   describe("_getDynamicPayloads", () => {
     // Arrange
     const rows = [
@@ -117,6 +120,7 @@ describe("Functions", () => {
       expect(payloads[1].text2).toBe("g");
     });
   });
+
   describe("_getModelsUsingRows", () => {
     const columns = [
       { column: 1, key: "email" },
@@ -136,6 +140,7 @@ describe("Functions", () => {
       expect(result[0].text2).toBe("c");
     });
   });
+
   describe("_getModelUsingCells", () => {
     const date = new Date();
     const columns = [
@@ -241,35 +246,41 @@ describe("Functions", () => {
     });
   });
 
-  describe("_isEventIssued", () => {
+  describe("_isIssued", () => {
     it("should return false when issued is undefined", () => {
-      expect(module._isEventIssued({} as any)).toBe(false);
+      expect(module._isIssued({} as any)).toBe(false);
     });
     // Worth checking as not sure if GAS uses undefined or null for empty.
     it("should return false when issued is null", () => {
-      expect(module._isEventIssued({ issued: null } as any)).toBe(false);
+      expect(module._isIssued({ issued: null } as any)).toBe(false);
+    });
+    it("should return false when issued is letter other than y", () => {
+      expect(module._isIssued({ issued: "a" })).toBe(false);
     });
     it("should return true when issued is lowercase y", () => {
-      expect(module._isEventIssued({ issued: "y" })).toBe(true);
+      expect(module._isIssued({ issued: "y" })).toBe(true);
     });
-    it("should return true when issued is uppercase y", () => {
-      expect(module._isEventIssued({ issued: "Y" })).toBe(true);
+    it(`should return true when issued is uppercase 'Y'`, () => {
+      expect(module._isIssued({ issued: "Y" })).toBe(true);
     });
   });
 
-  describe("_isEventVerified", () => {
-    it("should return false when issued is undefined", () => {
-      expect(module._isEventVerified({} as any)).toBe(false);
+  describe("_isVerified", () => {
+    it("should return false when verified is undefined", () => {
+      expect(module._isVerified({} as any)).toBe(false);
     });
     // Worth checking as not sure if GAS uses undefined or null for empty.
-    it("should return false when issued is null", () => {
-      expect(module._isEventVerified({ verified: null } as any)).toBe(false);
+    it("should return false when verified is null", () => {
+      expect(module._isVerified({ verified: null } as any)).toBe(false);
     });
-    it("should return true when issued is lowercase y", () => {
-      expect(module._isEventVerified({ verified: "y" })).toBe(true);
+    it("should return false when verified is letter other than y", () => {
+      expect(module._isVerified({ verified: "a" })).toBe(false);
     });
-    it("should return true when issued is uppercase y", () => {
-      expect(module._isEventVerified({ verified: "Y" })).toBe(true);
+    it("should return true when verified is lowercase y", () => {
+      expect(module._isVerified({ verified: "y" })).toBe(true);
+    });
+    it("should return true when verified is uppercase y", () => {
+      expect(module._isVerified({ verified: "Y" })).toBe(true);
     });
   });
 
@@ -319,12 +330,12 @@ describe("Functions", () => {
       getRange: jest.fn().mockReturnValue(range)
     } as any;
     const payloads = [{ rowIndex: 1 }, { rowIndex: 2 }, { rowIndex: 3 }] as any;
-    const updateBuilder = module._updateIssuedColumnForSheet(sheet)({
-      column: 1
-    });
+    const updateBuilder = module._updateIssuedColumnForSheet(sheet)(payloads);
 
     // Act
-    updateBuilder(payloads);
+    updateBuilder({
+      column: 1
+    });
 
     const call = range.setValues.mock.calls[0][0];
 
@@ -373,6 +384,76 @@ describe("Functions", () => {
 
     it("should update values using props", () => {
       expect(result.text2).toBe("c");
+    });
+  });
+
+  describe("_valueOrDefault", () => {
+    const run = (
+      input: any,
+      init: any,
+      assert: <T extends {}>(value: T) => any
+    ) => {
+      const value = module._valueOrDefault(input, init);
+      assert(value);
+    };
+
+    const valueCases = [
+      { input: {}, init: { default: 1 } },
+      { input: [], init: ["default"] },
+      { input: true, init: false },
+      { input: "input", init: "default" },
+      { input: 5, init: 1 }
+    ];
+
+    for (const { input, init } of valueCases) {
+      it(`should return value: ${JSON.stringify(
+        input
+      )} for input: ${JSON.stringify(input)}`, () => {
+        run(input, init, (value) => {
+          expect(init).not.toBe(value);
+          expect(input).toBe(value);
+        });
+      });
+    }
+
+    const defaultCases = [
+      { input: undefined, init: { default: 1 } },
+      { input: null, init: ["default"] },
+      { input: false, init: true },
+      { input: "", init: "default" },
+      { input: 0, init: 5 }
+    ];
+
+    for (const { input, init } of defaultCases) {
+      it(`should return default value: ${JSON.stringify(
+        init
+      )} for input: ${JSON.stringify(input)}`, () => {
+        run(input, init, (value) => {
+          expect(input).not.toBe(value);
+          expect(init).toBe(value);
+        });
+      });
+    }
+  });
+
+  describe("_appendError", () => {
+    // Arrange
+    const input = "test";
+    const error: IApiResponseError = {
+      message: "12345",
+      property: "67890"
+    };
+
+    // Act
+    const result = module._appendError(input, error);
+
+    // Assert
+    it("should not mutate message", () => {
+      expect(result).not.toBe(input);
+    });
+    it("should return new message using error", () => {
+      expect(result).toContain("12345");
+      expect(result).toContain("67890");
     });
   });
 });

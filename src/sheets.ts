@@ -46,6 +46,15 @@ const _objectEntries = (input: { [key: string]: any }) =>
   Object.keys(input).map((key) => [key, input[key]]) as Array<[string, any]>;
 
 /**
+ * Returns the value if truthy or returns the provided init value.
+ * @template T
+ * @param {T} input
+ * @param {T} init
+ */
+const _valueOrDefault = <T extends {}>(input: T, init: T) =>
+  !input ? init : input;
+
+/**
  * Convert a string to numbers using the character code for each letter.
  * https://stackoverflow.com/a/29040784/6387935 🙌
  * @param {string} letters
@@ -65,13 +74,13 @@ const _convertStringToNumber = (letters: string) =>
  */
 const _updateIssuedColumnForSheet = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet
-) => (issuedColumn: { column: number }) => (
-  payloads: ICreateActivityEvent[]
-) => {
+) => (payloads: ICreateActivityEvent[]) => (issuedColumn: {
+  column: number;
+}) => {
   const numberOfRows = sheet.getLastRow();
   // Get the range for the issued column.
   const range = sheet.getRange(2, issuedColumn.column, numberOfRows - 1);
-  const values = range.getValues() as IGetValuesResult;
+  const values = range.getValues();
 
   // Create the update from the existing values.
   const newValues = [...values];
@@ -88,24 +97,31 @@ const _addMenu = () =>
   SpreadsheetApp.getActiveSpreadsheet()!.addMenu("OpenBadges", MENU);
 
 /**
+ * Add to the error message using the error model.
+ * @param {string} message
+ * @param {IApiResponseError} error
+ * @returns
+ */
+const _appendError = (message: string, error: IApiResponseError) => {
+  message += `
+    Property: ${error.property}\n
+    Reason: ${error.message}\n\n
+  `;
+  return message;
+};
+
+/**
  * Create a nicely formatted error message.
  * @param {IApiResponseErrorModel} response
  * @returns
  */
-function _getPrettyError(response: IApiResponseErrorModel) {
-  const { message, errors } = response;
-  let info = `An error occurred: ${message}`;
-  if (errors !== undefined && errors.length > 0) {
-    info += "\n\n";
-    errors.forEach((error) => {
-      info += `Property: ${error.property}`;
-      info += "\n";
-      info += `Reason: ${error.message}`;
-      info += "\n\n";
-    });
-  }
-  return info;
-}
+const _getPrettyError = (response: IApiResponseErrorModel) => {
+  const { message, errors } = { ...response };
+  return _valueOrDefault(errors!, []).reduce(
+    _appendError,
+    `An error occurred: ${message}\n\n`
+  );
+};
 
 /**
  * Check whether the value is dynamic.
@@ -134,18 +150,13 @@ const _getModelUsingCells = (
   columns: Array<{ column: number; key: string }>
 ) => (
   acc: ICreateActivityEvent,
-  value: string | number | boolean | Date,
+  cell: string | number | boolean | Date,
   index: number
 ) => {
   const model = { ...acc };
-  const column = columns.filter((x) => x.column - 1 === index)[0];
-  if (column !== undefined) {
-    if (value instanceof Date) {
-      model[column.key] = value.toUTCString();
-    } else {
-      model[column.key] = value.toString();
-    }
-  }
+  const column = columns.filter((x) => x.column - 1 === index);
+  const value = cell instanceof Date ? cell.toUTCString() : cell.toString();
+  column.forEach((c) => (model[c.key] = value));
   return model;
 };
 
@@ -218,21 +229,22 @@ const _getDynamicColumns = (props: ISheetsDocumentProperties) =>
     .map(_toDynamicColumn);
 
 /**
- * Whether the event is verified or not.
+ * Whether the object is verified or not.
  * @param {({ verified: string | undefined })} e
  */
-const _isEventVerified = (e: { verified: string | undefined }) =>
+const _isVerified = (e: { verified: string | undefined }) =>
   !!e.verified && e.verified.toUpperCase() === "Y";
 
 /**
- * Whether the event is issued or not.
+ * Whether the object is issued or not.
  * @param {({ issued: string | undefined })} e
  */
-const _isEventIssued = (e: { issued: string | undefined }) =>
+const _isIssued = (e: { issued: string | undefined }) =>
   !!e.issued && e.issued.toUpperCase() === "Y";
 
 export {
   _addMenu,
+  _appendError,
   _convertStringToNumber,
   _getDynamicColumns,
   _getDynamicPayloads,
@@ -241,10 +253,11 @@ export {
   _getPayloads,
   _getPrettyError,
   _isDynamicValue,
-  _isEventIssued,
-  _isEventVerified,
+  _isIssued,
+  _isVerified,
   _objectEntries,
   _objectValues,
+  _valueOrDefault,
   _toDynamicColumn,
   _updateIssuedColumnForSheet,
   _withStaticData
@@ -293,53 +306,54 @@ function onRun(): void {
 
   // If the sheet uses issued, remove the payloads for events which
   // should not be issued OR have already been issued.
-  const issuedColumn = _getDynamicColumns(props).filter(
-    (col) => col.key === "issued"
-  )[0];
-  if (issuedColumn !== undefined) {
-    payloads = payloads
-      .filter(_isEventVerified)
-      .filter((x) => !_isEventIssued(x));
-  }
+  const trackingColumns = _getDynamicColumns(props).filter(
+    (col) => col.key === "issued" || "verified"
+  );
 
-  // Build the request headers.
-  const headers = {
-    Authorization: `Bearer ${props.apiToken}`,
-    ApiKey: props.apiKey
-  };
+  // Remove any payloads using the tracking columns if they have not been verified.
+  const verifiedColumn = trackingColumns.filter((x) => x.key === "verified");
+  verifiedColumn.forEach(() => {
+    payloads = payloads.filter((x) => _isVerified(x));
+  });
 
-  // Use the request headers and payload to create the request params.
+  // Remove any payloads using the tracking columns if they have already been issued.
+  const issuedColumn = trackingColumns.filter((x) => x.key === "issued");
+  issuedColumn.forEach(() => {
+    payloads = payloads.filter((x) => !_isIssued(x));
+  });
+
+  // Create the request object.
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     contentType: "application/json",
-    headers,
+    headers: {
+      Authorization: `Bearer ${props.apiToken}`,
+      ApiKey: props.apiKey
+    },
     payload: JSON.stringify(payloads),
     muteHttpExceptions: true
   };
 
-  // Make the request and get the response.
-  const response = UrlFetchApp.fetch(props.apiUrl, options);
+  // TODO: Placed somewhere better and tidy up.
+  const _handleSuccess = () => {
+    issuedColumn.forEach(_updateIssuedColumnForSheet(sheet)(payloads));
+    const message = `
+      Sent ${payloads.length} row${payloads.length > 1 ? "s" : ""}.
+    `;
+    SpreadsheetApp.getUi().alert(message);
+  };
 
-  // If the response code is 200 Ok then we can stop processing as it was a successful request.
-  const responseCode = response.getResponseCode();
-
-  // Handle response error by logging result and displaying an error alert.
-  if (responseCode !== 200) {
+  // TODO: Placed somewhere better and tidy up.
+  const _handleError = () => {
     const responseText = response.getContentText();
     Logger.log(`[onRun] Response body was ${responseText}`);
-    const errorMessage = _getPrettyError(JSON.parse(responseText));
-    SpreadsheetApp.getUi().alert(errorMessage);
-    return;
-  }
+    const message = _getPrettyError(JSON.parse(responseText));
+    SpreadsheetApp.getUi().alert(message);
+  };
 
-  // If we need to update the issued column that should be done now.
-  if (issuedColumn !== undefined) {
-    _updateIssuedColumnForSheet(sheet)(issuedColumn)(payloads);
-  }
-
-  SpreadsheetApp.getUi().alert(
-    `Sent ${payloads.length} row${payloads.length > 1 ? "s" : ""}.`
-  );
+  // Make the request and handle the response.
+  const response = UrlFetchApp.fetch(props.apiUrl, options);
+  response.getResponseCode() === 200 ? _handleSuccess() : _handleError();
 }
 
 /**
