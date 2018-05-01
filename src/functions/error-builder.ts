@@ -5,9 +5,9 @@ import { valueOrDefault } from "./helpers";
  * Create a nicely formatted error message from the ApiErrorResponse
  * @export
  * @param {ApiErrorResponse} response
- * @returns
+ * @returns A formatted string for the error.
  */
-export function getPrettyError(response: ApiErrorResponse) {
+export function getPrettyError(response: ApiErrorResponse): string {
   const { message, errors } = { ...response };
   return valueOrDefault(errors!, []).reduce(
     appendError,
@@ -19,10 +19,8 @@ export function getPrettyError(response: ApiErrorResponse) {
  * Add to the message using the error detail.
  * @param {string} message
  * @param {IApiResponseError} error
- * @returns
+ * @returns A new string with the property and associated message appended.
  */
-export function appendError(message: string, error: ErrorDetail) {
-  message += `Property: ${error.property}\n`;
-  message += `Reason: ${error.message}\n\n`;
-  return message;
+export function appendError(message: string, error: ErrorDetail): string {
+  return message + `Property: ${error.property}\nReason: ${error.message}\n\n`;
 }

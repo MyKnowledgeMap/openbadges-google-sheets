@@ -12,9 +12,6 @@ import {
   getPrettyError,
   updateIssuedColumnForSheet
 } from "./functions";
-import { SettingsHtmlTemplate } from "./models";
-import { CreateActivityEvent } from "./models/create-activity-event";
-import { DocumentProperties } from "./models/document-properties";
 
 // Extend the global object so the top level functions can be assigned to it.
 declare const global: {
@@ -30,7 +27,7 @@ declare const global: {
  * @export
  */
 export function onOpen(): void {
-  addMenu();
+  return addMenu();
 }
 global.onOpen = onOpen;
 
@@ -39,7 +36,7 @@ global.onOpen = onOpen;
  * @export
  */
 export function onInstall(): void {
-  addMenu();
+  return addMenu();
 }
 global.onInstall = onInstall;
 
@@ -48,8 +45,8 @@ global.onInstall = onInstall;
  * @param {DocumentProperties} props
  * @export
  */
-export function onSaveConfiguration(props: DocumentProperties): void {
-  PropertiesService.getDocumentProperties().setProperties(props);
+export function onSaveConfiguration(props: DocumentProperties): Properties {
+  return PropertiesService.getDocumentProperties().setProperties(props);
 }
 global.onSaveConfiguration = onSaveConfiguration;
 
@@ -64,34 +61,20 @@ export function onRun(): void {
   // Get the document properties.
   const props = PropertiesService.getDocumentProperties().getProperties() as DocumentProperties;
 
+  const verifiedPredicates: ReadonlyArray<Predicate<CreateActivityEvent>> = [
+    x => !!x.verified,
+    x => x.verified.toUpperCase() === "Y"
+  ];
+
+  const issuedPredicates: ReadonlyArray<Predicate<CreateActivityEvent>> = [
+    x => !x.issued,
+    x => x.issued.toUpperCase() !== "Y"
+  ];
+
   // Populate the models with dynamic and static data.
-  let payloads = getPayloads(props)(sheet);
-
-  // If the sheet uses issued, remove the payloads for events which
-  // should not be issued OR have already been issued.
-  const trackingColumns = getDynamicProperties(props).filter(
-    x => x.key === "issued" || "verified"
-  );
-
-  // Remove any payloads using the tracking columns if they have not been verified.
-  const verifiedColumn = trackingColumns.filter(x => x.key === "verified");
-  verifiedColumn.forEach(() => {
-    const predicates: Array<Predicate<CreateActivityEvent>> = [
-      x => !!x.verified,
-      x => x.verified.toUpperCase() === "Y"
-    ];
-    payloads = payloads.filter(and(predicates));
-  });
-
-  // Remove any payloads using the tracking columns if they have already been issued.
-  const issuedColumn = trackingColumns.filter(x => x.key === "issued");
-  issuedColumn.forEach(() => {
-    const predicates: Array<Predicate<CreateActivityEvent>> = [
-      x => !x.issued,
-      x => x.issued.toUpperCase() !== "Y"
-    ];
-    payloads = payloads.filter(and(predicates));
-  });
+  const payloads = getPayloads(props)(sheet)
+    .filter(and(verifiedPredicates))
+    .filter(and(issuedPredicates));
 
   // Create the request object.
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -106,25 +89,26 @@ export function onRun(): void {
   };
 
   // TODO: Placed somewhere better and tidy up.
+  // tslint:disable:no-expression-statement
   const handleSuccess = () => {
-    issuedColumn.forEach(updateIssuedColumnForSheet(sheet)(payloads));
+    getDynamicProperties(props)
+      .filter(x => x.key === "issued")
+      .forEach(updateIssuedColumnForSheet(sheet)(payloads));
     const message = `
       Sent ${payloads.length} row${payloads.length > 1 ? "s" : ""}.
     `;
     SpreadsheetApp.getUi().alert(message);
   };
-
-  // TODO: Placed somewhere better and tidy up.
   const handleError = () => {
     const responseText = response.getContentText();
-    Logger.log(`[onRun] Response body was ${responseText}`);
     const message = getPrettyError(JSON.parse(responseText));
     SpreadsheetApp.getUi().alert(message);
   };
+  // tslint:enable:no-expression-statement
 
   // Make the request and handle the response.
   const response = UrlFetchApp.fetch(props.apiUrl, options);
-  response.getResponseCode() === 200 ? handleSuccess() : handleError();
+  return response.getResponseCode() === 200 ? handleSuccess() : handleError();
 }
 global.onRun = onRun;
 
@@ -134,9 +118,6 @@ global.onRun = onRun;
  */
 export function showSettingsSidebar(): void {
   // Create the app template from the HTML template.
-  const template = HtmlService.createTemplate(
-    require("./templates/sheets-settings.sidebar.html")
-  ) as SettingsHtmlTemplate;
 
   // Add the bound properties to the template.
   const documentProperties = PropertiesService.getDocumentProperties();
@@ -145,13 +126,20 @@ export function showSettingsSidebar(): void {
   // Use the default props as a base for the saved props so that they are all defined on the template.
   const props = { ...DEFAULT_PROPS, ...savedProps };
 
-  // Bind the props to the template.
-  Object.entries(props).forEach(([k, v]) => (template[k] = v || ""));
+  const template = HtmlService.createTemplate(
+    require("./templates/sheets-settings.sidebar.html")
+  );
 
-  // Evaluate the template to HTML so bindings are rendered.
-  const html = template.evaluate().setTitle("Settings");
+  const templateMutator = (prev: any, [key, value]: [string, string]) => ({
+    ...prev,
+    [key]: value || ""
+  });
 
   // Create the sidebar from the HTML.
-  SpreadsheetApp.getUi().showSidebar(html);
+  return SpreadsheetApp.getUi().showSidebar(
+    Object.assign(template, Object.entries(props).reduce(templateMutator, {}))
+      .evaluate()
+      .setTitle("Settings")
+  );
 }
 global.showSettingsSidebar = showSettingsSidebar;

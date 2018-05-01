@@ -1,4 +1,4 @@
-{
+/* {
   "defaultSeverity": "error",
   "extends": ["tslint:recommended"],
   "jsRules": {},
@@ -15,4 +15,33 @@
     "interface-name": [true, "never-prefix"]
   },
   "rulesDirectory": []
+}
+ */
+
+{
+  "extends": ["tslint-immutable"],
+  "rules": {
+    // Recommended built-in rules
+    "no-var-keyword": true,
+    "no-parameter-reassignment": true,
+    "typedef": [true, "call-signature"],
+
+    // Immutability rules
+    "readonly-keyword": [true, "ignore-interface"],
+    "readonly-array": true,
+    "no-let": true,
+    "no-object-mutation": [true, { "ignore-prefix": "global" }],
+    "no-delete": true,
+    "no-method-signature": true,
+
+    // Functional style rules
+    "no-this": true,
+    "no-class": true,
+    "no-mixed-interface": true,
+    "no-expression-statement": [
+      true,
+      { "ignore-prefix": ["describe", "it", "expect", "beforeEach", "global"] }
+    ],
+    "no-if-statement": true
+  }
 }

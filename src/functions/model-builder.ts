@@ -1,59 +1,66 @@
-import { CreateActivityEvent, DynamicProperty } from "../models";
+import { setArray } from "./helpers";
 
 /**
  * Build all the models for a sheet using the dyanmic columns.
  *
  * @export
- * @param {DynamicProperty[]} columns
- * @returns
+ * @param {DynamicProperty[]} props
+ * @returns {IndexedReducer<CreateActivityEvent[], CellValue[]>}
  */
-export function getModelsUsingRows(columns: DynamicProperty[]) {
-  return (
-    previous: CreateActivityEvent[],
-    cells: Array<string | number | boolean | Date>,
-    rowIndex: number
-  ) => {
-    // Copy the payload array.
-    const current = [...previous];
-
-    // Get the model for this row using the cells.
-    const model = cells.reduce(
-      getModelUsingCells(columns),
-      new CreateActivityEvent()
+export function getModelsUsingRows(
+  props: ReadonlyArray<DynamicProperty>
+): IndexedReducer<
+  ReadonlyArray<CreateActivityEvent>,
+  ReadonlyArray<CellValue>
+> {
+  return (prev, cells, rowIndex) =>
+    setArray(
+      prev,
+      rowIndex,
+      cells.reduce(getModelUsingCells(props), createActivityEvent({ rowIndex }))
     );
-
-    // Set the row index.
-    model.rowIndex = rowIndex;
-
-    // Set the model to the index in array.
-    current[rowIndex] = model;
-    return current;
-  };
 }
 
 /**
- * Build a model for a row using the dynamic columns.
+ * Build a model for a row using the dynamic properties.
  *
  * @export
- * @param {DynamicProperty[]} columns
- * @returns {(
- *   previous: CreateActivityEvent,
- *   cell: CellValue,
- *   index: number
- * ) => CreateActivityEvent}
+ * @param {DynamicProperty[]} dynamicProperties
+ * @returns {IndexedReducer<CreateActivityEvent, CellValue>}
  */
 export function getModelUsingCells(
-  columns: DynamicProperty[]
-): (
-  previous: CreateActivityEvent,
-  cell: CellValue,
-  index: number
-) => CreateActivityEvent {
-  return (previous: CreateActivityEvent, cell: CellValue, index: number) => {
-    const current = new CreateActivityEvent({ ...previous });
-    const column = columns.filter(x => x.columnIndex - 1 === index);
+  dynamicProperties: ReadonlyArray<DynamicProperty>
+): IndexedReducer<CreateActivityEvent, CellValue> {
+  return (prev, cell, i) => {
     const value = cell instanceof Date ? cell.toUTCString() : cell.toString();
-    column.forEach(c => (current[c.key] = value));
-    return current;
+
+    return dynamicProperties
+      .filter(prop => prop.columnIndex - 1 === i)
+      .reduce(
+        (prev, prop) => Object.assign({ ...prev }, { [prop.key]: value }),
+        createActivityEvent(prev)
+      );
+  };
+}
+
+export function createActivityEvent(
+  init?: Partial<CreateActivityEvent>
+): CreateActivityEvent {
+  return {
+    activityId: undefined,
+    activityTime: undefined,
+    text1: undefined,
+    text2: undefined,
+    email: undefined,
+    userId: undefined,
+    firstName: undefined,
+    lastName: undefined,
+    int1: undefined,
+    int2: undefined,
+    date1: undefined,
+    verified: undefined,
+    issued: undefined,
+    rowIndex: 0,
+    ...init
   };
 }

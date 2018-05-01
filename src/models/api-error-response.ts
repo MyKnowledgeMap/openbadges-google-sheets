@@ -3,8 +3,8 @@
  * @interface ApiErrorResponse
  */
 export interface ApiErrorResponse {
-  message: string;
-  errors?: ErrorDetail[];
+  readonly message: string;
+  readonly errors?: ReadonlyArray<ErrorDetail>;
 }
 
 /**
@@ -12,6 +12,6 @@ export interface ApiErrorResponse {
  * @interface ErrorDetail
  */
 export interface ErrorDetail {
-  property: string;
-  message: string;
+  readonly property: string;
+  readonly message: string;
 }

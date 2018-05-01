@@ -1,7 +1,5 @@
-import { DocumentProperties } from "./models/document-properties";
-
 // The menu used by the add-on.
-export const MENU = [
+export const MENU: ReadonlyArray<any> = [
   { name: "Settings", functionName: "showSettingsSidebar" },
   { name: "Run", functionName: "onRun" }
 ];

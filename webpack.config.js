@@ -1,14 +1,15 @@
 const GasPlugin = require("gas-webpack-plugin");
+const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
   context: __dirname,
   mode: "production",
   entry: {
-    app: "./src/index.ts"
+    Sheets: "./src/index.ts"
   },
   output: {
     path: __dirname,
-    filename: "./dist/[name].gs"
+    filename: "./dist/[name].js"
   },
   plugins: [new GasPlugin()],
   resolve: {
@@ -27,7 +28,7 @@ module.exports = {
                   "@babel/env",
                   {
                     targets: {
-                      browsers: ["ie >= 11"]
+                      browsers: ["ie >= 8"]
                     },
                     useBuiltIns: false
                   }
@@ -44,6 +45,27 @@ module.exports = {
         test: /\.html$/,
         loader: "html-loader"
       }
+    ]
+  },
+  optimization: {
+    // Production mode uses UglifyJSPlugin by default but we need to modify it to work with GAS.
+    minimizer: [
+      // Modifying this configuration will very likely break the script in GAS. Make sure to test!
+      new UglifyJSPlugin({
+        uglifyOptions: {
+          compress: false,
+          mangle: false,
+          toplevel: false,
+          keep_classnames: true,
+          keep_fnames: true,
+          ie8: true,
+          ecma: 5,
+          output: {
+            comments: false,
+            beautify: false
+          }
+        }
+      })
     ]
   }
 };

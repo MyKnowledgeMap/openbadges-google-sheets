@@ -1,35 +1,34 @@
 /**
- * Combine multiple predicates.
- * @template T
+ * Combine multiple predicates into one predicate.
+ *
  * @param {Array<Predicate<T>>} predicates
- * @returns
+ * @returns A predicate which accepts T object and evaluates to true or false
+ * depending on the outcome of the provided predicates.
  */
-export function and<T>(predicates: Array<Predicate<T>>) {
-  return (obj: T) => predicates.every(predicate => predicate(obj));
+export function and<T>(predicates: ReadonlyArray<Predicate<T>>): Predicate<T> {
+  return (x: T) => predicates.every(predicate => predicate(x));
 }
 
 /**
- * Return the value if truthy or return the provided init value.
- * @template T
+ * Return the provided init value if the input is falsy.
+ *
+ * @export
  * @param {T} input
  * @param {T} init
+ * @returns {T}
  */
-export function valueOrDefault<T>(input: T, init: T) {
+export function valueOrDefault<T>(input: T, init: T): T {
   return !input ? init : input;
 }
 
 /**
  * Convert a string to numbers using the character code for each letter.
- * https://stackoverflow.com/a/29040784/6387935 🙌
+ *
+ * @export
  * @param {string} input
+ * @returns {number}
  */
-export function convertStringToNumber(input: string) {
-  if (!/^[a-zA-Z]+$/.test(input)) {
-    throw new Error(
-      "Input must be a non-empty string of only uppercase or lowercase letters."
-    );
-  }
-
+export function convertStringToNumber(input: string): number {
   return input
     .toLowerCase()
     .split("")
@@ -38,4 +37,14 @@ export function convertStringToNumber(input: string) {
         (letters[letters.length - 1 - i].charCodeAt(0) - 96) * Math.pow(26, i);
       return count + value;
     }, 0);
+}
+
+//TODO: JSDoc
+export function setArray<T>(
+  // tslint:disable-next-line:readonly-array
+  arr: ReadonlyArray<T> | T[],
+  i: number,
+  value: T
+): ReadonlyArray<T> {
+  return Object.assign([...arr], { [i]: value });
 }

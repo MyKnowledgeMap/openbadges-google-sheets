@@ -1,3 +1,4 @@
+// tslint:disable:readonly-keyword
 export interface Global {
   SpreadsheetApp: GoogleAppsScript.Spreadsheet.SpreadsheetApp;
   PropertiesService: GoogleAppsScript.Properties.PropertiesService;

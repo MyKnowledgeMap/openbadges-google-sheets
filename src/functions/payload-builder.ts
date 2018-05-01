@@ -1,8 +1,3 @@
-import {
-  CreateActivityEvent,
-  DocumentProperties,
-  DynamicProperty
-} from "../models";
 import { and, convertStringToNumber } from "./helpers";
 import { getModelsUsingRows } from "./model-builder";
 
@@ -15,7 +10,7 @@ import { getModelsUsingRows } from "./model-builder";
  */
 export function getPayloads(
   props: DocumentProperties
-): Builder<Sheet, CreateActivityEvent[]> {
+): Builder<Sheet, ReadonlyArray<CreateActivityEvent>> {
   return (sheet: Sheet) =>
     getDynamicPayloads(props)(sheet).map(withStaticData(props));
 }
@@ -29,13 +24,13 @@ export function getPayloads(
  */
 export function getDynamicPayloads(
   props: DocumentProperties
-): Builder<Sheet, CreateActivityEvent[]> {
+): Builder<Sheet, ReadonlyArray<CreateActivityEvent>> {
   return (sheet: Sheet) => {
     const numberOfRows = sheet.getLastRow();
     const numberOfColumns = sheet.getLastColumn();
-    const rows = sheet
+    const rows: GetValuesResult = sheet
       .getRange(2, 1, numberOfRows - 1, numberOfColumns)
-      .getValues() as GetValuesResult;
+      .getValues() as any;
     const dynamic = getDynamicProperties(props);
     return rows.reduce(getModelsUsingRows(dynamic), []);
   };
@@ -52,15 +47,16 @@ export function withStaticData(
   props: DocumentProperties
 ): Builder<CreateActivityEvent, CreateActivityEvent> {
   return (model: CreateActivityEvent) => {
-    const updated: { [key: string]: string } = {};
-    const predicates: Array<Predicate<string[]>> = [
-      ([k]) => !/(api)(\S+)/.test(k),
-      ([k]) => model[k] === undefined
+    const predicates: ReadonlyArray<Predicate<ReadonlyArray<string>>> = [
+      ([key]) => !/(api)(\S+)/.test(key),
+      ([key]) => model[key] === undefined
     ];
-    Object.entries(props)
+    return Object.entries(props)
       .filter(and(predicates))
-      .forEach(([k, v]) => (updated[k] = v));
-    return new CreateActivityEvent({ ...model, ...updated });
+      .reduce(
+        (prev, [key, value]) => Object.assign({ ...prev }, { [key]: value }),
+        model
+      );
   };
 }
 
@@ -73,7 +69,7 @@ export function withStaticData(
  */
 export function getDynamicProperties(
   props: DocumentProperties
-): DynamicProperty[] {
+): ReadonlyArray<DynamicProperty> {
   return Object.entries(props)
     .filter(([_, value]) => /{{.+}}/.test(value))
     .map(asDynamicProperty);
@@ -91,9 +87,20 @@ export function asDynamicProperty([key, original]: [
   string
 ]): DynamicProperty {
   const value: string = original.replace(/[{}]/g, "").toUpperCase();
-  return new DynamicProperty({
+  return createDynamicProperty({
     key,
     value,
     columnIndex: convertStringToNumber(value.toLowerCase())
   });
+}
+
+export function createDynamicProperty(
+  init?: Partial<DynamicProperty>
+): DynamicProperty {
+  return {
+    columnIndex: undefined,
+    key: undefined,
+    value: undefined,
+    ...init
+  };
 }

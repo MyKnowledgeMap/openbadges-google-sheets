@@ -42,6 +42,7 @@ describe("appendError", () => {
   it("should not mutate message", () => {
     expect(result).not.toBe(input);
   });
+
   it("should return new message using error", () => {
     expect(result).toBe("Property: 67890\nReason: 12345\n\n");
   });

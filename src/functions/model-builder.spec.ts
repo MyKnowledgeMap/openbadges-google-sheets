@@ -7,15 +7,18 @@ describe("getModelsUsingRows", () => {
     { columnIndex: 3, key: "text2" }
   ] as any;
   const modelBuilder = getModelsUsingRows(columns);
-  const cells = ["a", "b", "c", "d"];
-  const input: any[] = [];
+  const cells: ReadonlyArray<any> = ["a", "b", "c", "d"];
+  const input: ReadonlyArray<any> = [];
   const result = modelBuilder(input, cells, 0);
+
   it("should not mutate input", () => {
     expect(input).not.toBe(result);
   });
+
   it("should add model to array", () => {
     expect(result.length).toBe(1);
   });
+
   it("should build model using column and key", () => {
     expect(result[0].email).toBe("a");
     expect(result[0].text1).toBe("b");

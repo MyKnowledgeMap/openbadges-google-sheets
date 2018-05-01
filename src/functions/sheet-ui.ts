@@ -1,12 +1,14 @@
 import { MENU } from "../constants";
-import { CreateActivityEvent, DynamicProperty } from "../models";
+import { setArray } from ".";
 
 /**
  * Add the menu to the active spreadsheet.
  * @export
  */
 export function addMenu(): void {
-  SpreadsheetApp.getActiveSpreadsheet()!.addMenu("OpenBadges", MENU);
+  return SpreadsheetApp.getActiveSpreadsheet()!.addMenu("OpenBadges", [
+    ...MENU
+  ]);
 }
 
 /**
@@ -14,12 +16,15 @@ export function addMenu(): void {
  *
  * @export
  * @param {Sheet} sheet
- * @returns {Builder<CreateActivityEvent[], Builder<DynamicProperty, void>>}
+ * @returns {Builder<CreateActivityEvent[], Builder<DynamicProperty, Range>>}
  */
 export function updateIssuedColumnForSheet(
   sheet: Sheet
-): Builder<CreateActivityEvent[], Builder<DynamicProperty, void>> {
-  return (payloads: CreateActivityEvent[]) => (
+): Builder<
+  ReadonlyArray<CreateActivityEvent>,
+  Builder<DynamicProperty, Range>
+> {
+  return (payloads: ReadonlyArray<CreateActivityEvent>) => (
     dynamicProperty: DynamicProperty
   ) => {
     // Get the range for the issued column.
@@ -28,13 +33,13 @@ export function updateIssuedColumnForSheet(
       dynamicProperty.columnIndex,
       sheet.getLastRow() - 1
     );
-    const values = range.getValues();
+    const rangeValues = Object.freeze(range.getValues());
 
-    // Create the update from the existing values.
-    const newValues = [...values];
-    payloads.map(x => x.rowIndex).forEach(i => (newValues[i] = ["Y"]));
+    const result = payloads
+      .map(x => x.rowIndex)
+      .reduce((values, index) => setArray(values, index, ["Y"]), rangeValues);
 
-    // Execute the update.
-    range.setValues(newValues);
+    // Would be nice if didn't have to typecast here but setValues doesn't like ReadonlyArray :(
+    return range.setValues(result as any);
   };
 }

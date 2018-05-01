@@ -1,11 +1,13 @@
 import { Global } from "./../__mocks__/global.mock";
 import { addMenu, updateIssuedColumnForSheet } from "./sheet-ui";
 declare const global: Global;
+// tslint:disable:no-object-mutation no-expression-statement
 
 describe("addMenu", () => {
   it("should add menu", () => {
     // Arrange
     const sheet = { addMenu: jest.fn() };
+
     global.SpreadsheetApp = {
       getActiveSpreadsheet: jest.fn().mockReturnValue(sheet)
     } as any;
@@ -20,7 +22,14 @@ describe("addMenu", () => {
 });
 
 describe("updateIssuedColumnForSheet", () => {
-  const values = [[undefined], [null], [""], ["N"], ["Y"], ["N"]];
+  const values: ReadonlyArray<any> = [
+    [undefined],
+    [null],
+    [""],
+    ["N"],
+    ["Y"],
+    ["N"]
+  ];
   const range = {
     getValues: jest.fn().mockReturnValue(values),
     setValues: jest.fn()

@@ -1,13 +1,12 @@
-import { Global } from "./../__mocks__/global.mock";
+import { Global } from "./__mocks__/global.mock";
 import {
   onInstall,
   onOpen,
   onRun,
   onSaveConfiguration,
   showSettingsSidebar
-} from "./../index";
-import { DocumentProperties, SettingsHtmlTemplate } from "./../models";
-
+} from "./index";
+// tslint:disable:no-expression-statement no-let
 declare const global: Global;
 
 describe("Triggers & Events", () => {
@@ -138,7 +137,7 @@ describe("Triggers & Events", () => {
     let range: GoogleAppsScript.Spreadsheet.Range;
     const ui = { alert: jest.fn() };
     // Setup the spreadsheet mock.
-    const setupSpreadsheet = (values: any[][]) => {
+    const setupSpreadsheet = (values: ReadonlyArray<ReadonlyArray<any>>) => {
       range = {
         getValues: jest.fn().mockReturnValue(values),
         setValues: jest.fn()
@@ -179,7 +178,7 @@ describe("Triggers & Events", () => {
     describe("when verified and issued are not used", () => {
       it("should not update sheet", () => {
         // Arrange
-        const values = [["Y", ""]];
+        const values: ReadonlyArray<any> = [["Y", ""]];
         setupSpreadsheet(values);
         setupProperties({});
         setupUrlFetch(200);
@@ -194,7 +193,7 @@ describe("Triggers & Events", () => {
       describe("when is verified and issued is falsy", () => {
         it("should update issued column", () => {
           // Arrange
-          const values = [["Y", ""]];
+          const values: ReadonlyArray<any> = [["Y", ""]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
@@ -207,7 +206,7 @@ describe("Triggers & Events", () => {
       describe("when is verified and not issued", () => {
         it("should update issued column", () => {
           // Arrange
-          const values = [["Y", "N"]];
+          const values: ReadonlyArray<any> = [["Y", "N"]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
@@ -220,7 +219,7 @@ describe("Triggers & Events", () => {
       describe("when is verified and issued", () => {
         it("should not update issued column", () => {
           // Arrange
-          const values = [["Y", "Y"]];
+          const values: ReadonlyArray<any> = [["Y", "Y"]];
           setupSpreadsheet(values);
           setupProperties({ verified: "{{A}}", issued: "{{B}}" });
           setupUrlFetch(200);
@@ -235,7 +234,7 @@ describe("Triggers & Events", () => {
     describe("when request is successful", () => {
       it("should display success alert", () => {
         // Arrange
-        const values = [["Y", ""], ["Y", ""]];
+        const values: ReadonlyArray<any> = [["Y", ""], ["Y", ""]];
         setupSpreadsheet(values);
         setupProperties({ verified: "{{A}}", issued: "{{B}}" });
         setupUrlFetch(200);

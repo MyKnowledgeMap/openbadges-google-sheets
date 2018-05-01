@@ -1,7 +1,7 @@
 import { and, convertStringToNumber, valueOrDefault } from "./helpers";
 
 describe("and", () => {
-  const predicateTests: any[] = [
+  const predicateTests: ReadonlyArray<any> = [
     {
       description:
         "should return true when property is undefined and predicate is property underfined.",
@@ -18,21 +18,23 @@ describe("and", () => {
     },
     {
       description: "should return true when property is matching predicate.",
-      predicates: [(x: { issued: string }) => x.issued.toUpperCase() === "Y"],
+      predicates: [
+        (x: { readonly issued: string }) => x.issued.toUpperCase() === "Y"
+      ],
       obj: { issued: "y" },
       result: true
     },
     {
       description:
         "should return true when property is matching predicate exact.",
-      predicates: [(x: { issued: string }) => x.issued === "Y"],
+      predicates: [(x: { readonly issued: string }) => x.issued === "Y"],
       obj: { issued: "Y" },
       result: true
     },
     {
       description:
         "should return false when property is matching predicate but not exact.",
-      predicates: [(x: { issued: string }) => x.issued === "Y"],
+      predicates: [(x: { readonly issued: string }) => x.issued === "Y"],
       obj: { issued: "y" },
       result: false
     },
@@ -40,8 +42,8 @@ describe("and", () => {
       description:
         "should return true when property is matching multiple predicates.",
       predicates: [
-        (x: { issued: string }) => x.issued === "Y",
-        (x: { verified: string }) => x.verified === "Y"
+        (x: { readonly issued: string }) => x.issued === "Y",
+        (x: { readonly verified: string }) => x.verified === "Y"
       ],
       obj: { issued: "Y", verified: "Y" },
       result: true
@@ -63,7 +65,7 @@ describe("valueOrDefault", () => {
     assert: <T extends {}>(value: T) => any
   ) => {
     const value = valueOrDefault(input, init);
-    assert(value);
+    return assert(value);
   };
 
   const valueCases = [
@@ -77,12 +79,11 @@ describe("valueOrDefault", () => {
   for (const { input, init } of valueCases) {
     it(`should return value: ${JSON.stringify(
       input
-    )} for input: ${JSON.stringify(input)}`, () => {
+    )} for input: ${JSON.stringify(input)}`, () =>
       run(input, init, value => {
         expect(init).not.toBe(value);
         expect(input).toBe(value);
-      });
-    });
+      }));
   }
 
   const defaultCases = [
@@ -96,18 +97,17 @@ describe("valueOrDefault", () => {
   for (const { input, init } of defaultCases) {
     it(`should return default value: ${JSON.stringify(
       init
-    )} for input: ${JSON.stringify(input)}`, () => {
+    )} for input: ${JSON.stringify(input)}`, () =>
       run(input, init, value => {
         expect(input).not.toBe(value);
         expect(init).toBe(value);
-      });
-    });
+      }));
   }
 });
 
 describe("convertStringToNumber", () => {
   // Arrange
-  const testCases = [
+  const testCases: ReadonlyArray<any> = [
     { input: "a", output: 1 },
     { input: "b", output: 2 },
     { input: "z", output: 26 },
@@ -123,12 +123,4 @@ describe("convertStringToNumber", () => {
       expect(convertStringToNumber(input)).toBe(output);
     });
   }
-
-  it("should errror if numerics in string", () => {
-    expect(() => convertStringToNumber("ab1")).toThrow();
-  });
-
-  it("should errror if special chars in string", () => {
-    expect(() => convertStringToNumber("-@z")).toThrow();
-  });
 });
