@@ -1,9 +1,12 @@
 /**
- * Interface for the user's document properties.
- * @interface ISheetsDocumentProperties
+ * The HTML template object for the settings sidebar.
+ * @export
+ * @interface SettingsHtmlTemplate
+ * @extends {GoogleAppsScript.HTML.HtmlTemplate}
  */
-interface ISheetsDocumentProperties {
-  [key: string]: string;
+export interface SettingsHtmlTemplate
+  extends GoogleAppsScript.HTML.HtmlTemplate {
+  [key: string]: string | any;
   apiKey: string;
   apiUrl: string;
   apiToken: string;

@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
-    "pretty": true,
-    "target": "es6",
-    "allowJs": false,
-    "noEmit": true,
+    "target": "es3",
+    "module": "commonjs",
+    "lib": ["es2015", "es2016", "es2017", "es2018"],
     "strict": true,
-    "lib": ["es6"],
-    "allowSyntheticDefaultImports": true,
-    "module": "commonjs"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+    "noImplicitAny": true,
+    "strictNullChecks": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
 }

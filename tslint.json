@@ -5,13 +5,14 @@
   "rules": {
     "object-literal-sort-keys": false,
     "trailing-comma": false,
-    "arrow-parens": true,
+    "arrow-parens": false,
     "variable-name": [
       true,
       "ban-keywords",
       "check-format",
       "allow-leading-underscore"
-    ]
+    ],
+    "interface-name": [true, "never-prefix"]
   },
   "rulesDirectory": []
 }

@@ -1,10 +1,9 @@
 /**
- * Interface for Settings Template.
- * @interface SheetsSettingsTemplate
- * @extends {FormsSettingsTemplate}
+ * The user's document properties.
+ * @interface DocumentProperties
  */
-interface ISheetsSettingsTemplate extends GoogleAppsScript.HTML.HtmlTemplate {
-  [key: string]: string | any;
+export interface DocumentProperties {
+  [key: string]: string;
   apiKey: string;
   apiUrl: string;
   apiToken: string;
