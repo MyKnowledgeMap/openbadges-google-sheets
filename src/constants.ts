@@ -1,11 +1,11 @@
 // The menu used by the add-on.
-export const MENU: ReadonlyArray<any> = [
+export const MENU: ReadonlyArray<{ name: string; functionName: string }> = [
   { name: "Settings", functionName: "showSettingsSidebar" },
   { name: "Run", functionName: "onRun" }
 ];
 
 // The default properties.
-export const DEFAULT_PROPS = {
+export const DEFAULT_PROPS: DocumentProperties = {
   apiKey: "",
   apiUrl: "",
   apiToken: "",
@@ -21,4 +21,4 @@ export const DEFAULT_PROPS = {
   lastName: "",
   verified: "",
   issued: ""
-} as DocumentProperties;
+};

@@ -24,7 +24,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.46",
     "@babel/preset-env": "^7.0.0-beta.46",
-    "@types/core-js": "^0.9.46",
+    "@babel/preset-typescript": "^7.0.0-beta.46",
     "@types/google-apps-script": "0.0.21",
     "@types/jest": "^22.2.3",
     "@types/node": "^9.6.7",

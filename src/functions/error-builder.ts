@@ -1,8 +1,8 @@
-import { ApiErrorResponse, ErrorDetail } from "../models";
 import { valueOrDefault } from "./helpers";
 
 /**
  * Create a nicely formatted error message from the ApiErrorResponse
+ *
  * @export
  * @param {ApiErrorResponse} response
  * @returns A formatted string for the error.
@@ -17,6 +17,7 @@ export function getPrettyError(response: ApiErrorResponse): string {
 
 /**
  * Add to the message using the error detail.
+ *
  * @param {string} message
  * @param {IApiResponseError} error
  * @returns A new string with the property and associated message appended.

@@ -7,42 +7,45 @@ import { setArray } from "./helpers";
  * @param {DynamicProperty[]} props
  * @returns {IndexedReducer<CreateActivityEvent[], CellValue[]>}
  */
-export function getModelsUsingRows(
+export function getModelsUsingDynamicProperties(
   props: ReadonlyArray<DynamicProperty>
 ): IndexedReducer<
   ReadonlyArray<CreateActivityEvent>,
   ReadonlyArray<CellValue>
 > {
-  return (prev, cells, rowIndex) =>
+  return (models, cells, rowIndex) =>
     setArray(
-      prev,
+      models,
       rowIndex,
-      cells.reduce(getModelUsingCells(props), createActivityEvent({ rowIndex }))
+      cells.reduce(
+        (model, cellValue, i) =>
+          props
+            // Filter dynamic properties the current index
+            .filter(prop => prop.columnIndex - 1 === i)
+            // Immutably build the CreateActivityEvent model.
+            .reduce((prev, prop) => {
+              // Return a new model based on the previous model with an updated property for the cell value.
+              return {
+                ...prev,
+                [prop.key]:
+                  // Get the cell value as a string or UTC string.
+                  cellValue instanceof Date
+                    ? cellValue.toUTCString()
+                    : cellValue.toString()
+              };
+            }, createActivityEvent(model)), // Initialise the nested reducer with a new model based on the previous value.
+        createActivityEvent({ rowIndex }) // Initialise the reducer with new model with rowIndex set.
+      )
     );
 }
 
 /**
- * Build a model for a row using the dynamic properties.
+ * Create a new activity event model.
  *
  * @export
- * @param {DynamicProperty[]} dynamicProperties
- * @returns {IndexedReducer<CreateActivityEvent, CellValue>}
+ * @param {Partial<CreateActivityEvent>} [init]
+ * @returns {CreateActivityEvent}
  */
-export function getModelUsingCells(
-  dynamicProperties: ReadonlyArray<DynamicProperty>
-): IndexedReducer<CreateActivityEvent, CellValue> {
-  return (prev, cell, i) => {
-    const value = cell instanceof Date ? cell.toUTCString() : cell.toString();
-
-    return dynamicProperties
-      .filter(prop => prop.columnIndex - 1 === i)
-      .reduce(
-        (prev, prop) => Object.assign({ ...prev }, { [prop.key]: value }),
-        createActivityEvent(prev)
-      );
-  };
-}
-
 export function createActivityEvent(
   init?: Partial<CreateActivityEvent>
 ): CreateActivityEvent {

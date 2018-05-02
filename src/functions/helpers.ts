@@ -1,7 +1,7 @@
 /**
  * Combine multiple predicates into one predicate.
  *
- * @param {Array<Predicate<T>>} predicates
+ * @param {ReadonlyArray<Predicate<T>>} predicates An array of predicates to be evaluated.
  * @returns A predicate which accepts T object and evaluates to true or false
  * depending on the outcome of the provided predicates.
  */
@@ -9,13 +9,18 @@ export function and<T>(predicates: ReadonlyArray<Predicate<T>>): Predicate<T> {
   return (x: T) => predicates.every(predicate => predicate(x));
 }
 
+// Not actually used...
+// export function or<T>(predicates: ReadonlyArray<Predicate<T>>): Predicate<T> {
+//   return (x: T) => predicates.some(predicate => predicate(x));
+// }
+
 /**
- * Return the provided init value if the input is falsy.
+ * Get a default value if the input is falsy.
  *
  * @export
- * @param {T} input
- * @param {T} init
- * @returns {T}
+ * @param {T} input The input value
+ * @param {T} init The default initialise value.
+ * @returns {T} The provided default value if the input is falsy, otherwise returns the input value.
  */
 export function valueOrDefault<T>(input: T, init: T): T {
   return !input ? init : input;
@@ -39,12 +44,20 @@ export function convertStringToNumber(input: string): number {
     }, 0);
 }
 
-//TODO: JSDoc
+/**
+ * Immutably update an array value at index by creating a new array.
+ *
+ * @export
+ * @template T
+ * @param {(ReadonlyArray<T> | T[])} array The array to use for immutably updating.
+ * @param {number} index The index of the array to update.
+ * @param {T} value The value to update with.
+ * @returns {ReadonlyArray<T>}
+ */
 export function setArray<T>(
-  // tslint:disable-next-line:readonly-array
-  arr: ReadonlyArray<T> | T[],
-  i: number,
+  array: ReadonlyArray<T> | T[], // tslint:disable-line:readonly-array
+  index: number,
   value: T
 ): ReadonlyArray<T> {
-  return Object.assign([...arr], { [i]: value });
+  return [...array.slice(0, index), value, ...array.slice(index + 1)];
 }

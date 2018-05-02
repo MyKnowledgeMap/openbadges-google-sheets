@@ -105,8 +105,7 @@ describe("Triggers & Events", () => {
       beforeAll(() => {
         // Arrange
         props = {
-          apiKey: "test",
-          apiUrl: undefined
+          apiKey: "test"
         } as any;
         setupHtml();
         setupProperties();
@@ -128,7 +127,7 @@ describe("Triggers & Events", () => {
       it("should bind value to template when property is defined", () =>
         expect(template.apiKey).toBe(props.apiKey));
 
-      it("should bind value to template as empty string when property is undefined", () =>
+      it("should bind value to template as empty string when property is not defined", () =>
         expect(template.apiUrl).toBe(""));
     });
   });

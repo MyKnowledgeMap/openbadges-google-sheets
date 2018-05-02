@@ -1,4 +1,3 @@
-import { ApiErrorResponse, ErrorDetail } from "../models";
 import { appendError, getPrettyError } from "./error-builder";
 
 describe("getPrettyError", () => {

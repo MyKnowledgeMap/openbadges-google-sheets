@@ -5,7 +5,7 @@ module.exports = {
   context: __dirname,
   mode: "production",
   entry: {
-    Sheets: "./src/index.ts"
+    sheets: "./src/index.ts"
   },
   output: {
     path: __dirname,
@@ -24,20 +24,19 @@ module.exports = {
             loader: "babel-loader", // babel-loader runs last, transpiling to GAS compatible JS.
             options: {
               presets: [
+                ["@babel/preset-typescript"],
                 [
-                  "@babel/env",
+                  "@babel/preset-env",
                   {
                     targets: {
-                      browsers: ["ie >= 8"]
+                      browsers: ["ie >= 9"]
                     },
-                    useBuiltIns: false
+                    useBuiltIns: "usage",
+                    debug: true
                   }
                 ]
               ]
             }
-          },
-          {
-            loader: "ts-loader" // ts-loader runs first, transpiling from TS to JS.
           }
         ]
       },
@@ -62,7 +61,7 @@ module.exports = {
           ecma: 5,
           output: {
             comments: false,
-            beautify: false
+            beautify: true
           }
         }
       })

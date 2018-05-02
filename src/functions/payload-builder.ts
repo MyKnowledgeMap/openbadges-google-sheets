@@ -1,5 +1,5 @@
 import { and, convertStringToNumber } from "./helpers";
-import { getModelsUsingRows } from "./model-builder";
+import { getModelsUsingDynamicProperties } from "./model-builder";
 
 /**
  * Build the payloads using dynamic and static data from the sheet and props.
@@ -11,8 +11,28 @@ import { getModelsUsingRows } from "./model-builder";
 export function getPayloads(
   props: DocumentProperties
 ): Builder<Sheet, ReadonlyArray<CreateActivityEvent>> {
-  return (sheet: Sheet) =>
-    getDynamicPayloads(props)(sheet).map(withStaticData(props));
+  const usingTracking = getDynamicProperties(props).some(
+    x => x.key === "issued"
+  );
+
+  return (sheet: Sheet) => {
+    const allPayloads = getDynamicPayloads(props)(sheet).map(
+      withStaticData(props)
+    );
+
+    return usingTracking
+      ? allPayloads.filter(
+          and<CreateActivityEvent>([
+            // Verified is defined.
+            x => !!x.verified,
+            // Verified is "Y".
+            x => x.verified.toUpperCase() === "Y",
+            // (Issued is undefined OR Issued is not "Y")
+            x => !x.issued || x.issued.toUpperCase() !== "Y"
+          ])
+        )
+      : allPayloads;
+  };
 }
 
 /**
@@ -32,7 +52,7 @@ export function getDynamicPayloads(
       .getRange(2, 1, numberOfRows - 1, numberOfColumns)
       .getValues() as any;
     const dynamic = getDynamicProperties(props);
-    return rows.reduce(getModelsUsingRows(dynamic), []);
+    return rows.reduce(getModelsUsingDynamicProperties(dynamic), []);
   };
 }
 
@@ -46,18 +66,15 @@ export function getDynamicPayloads(
 export function withStaticData(
   props: DocumentProperties
 ): Builder<CreateActivityEvent, CreateActivityEvent> {
-  return (model: CreateActivityEvent) => {
-    const predicates: ReadonlyArray<Predicate<ReadonlyArray<string>>> = [
-      ([key]) => !/(api)(\S+)/.test(key),
-      ([key]) => model[key] === undefined
-    ];
-    return Object.entries(props)
-      .filter(and(predicates))
-      .reduce(
-        (prev, [key, value]) => Object.assign({ ...prev }, { [key]: value }),
-        model
-      );
-  };
+  return (model: CreateActivityEvent) =>
+    Object.entries(props)
+      .filter(
+        and([
+          ([key]) => !/(api)(\S+)/.test(key),
+          ([key]) => model[key] === undefined
+        ])
+      )
+      .reduce((prev, [key, value]) => ({ ...prev, [key]: value }), model);
 }
 
 /**
@@ -87,20 +104,9 @@ export function asDynamicProperty([key, original]: [
   string
 ]): DynamicProperty {
   const value: string = original.replace(/[{}]/g, "").toUpperCase();
-  return createDynamicProperty({
+  return {
     key,
     value,
     columnIndex: convertStringToNumber(value.toLowerCase())
-  });
-}
-
-export function createDynamicProperty(
-  init?: Partial<DynamicProperty>
-): DynamicProperty {
-  return {
-    columnIndex: undefined,
-    key: undefined,
-    value: undefined,
-    ...init
   };
 }

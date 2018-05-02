@@ -26,6 +26,8 @@
     "no-parameter-reassignment": true,
     "typedef": [true, "call-signature"],
 
+    "completed-docs": true,
+
     // Immutability rules
     "readonly-keyword": [true, "ignore-interface"],
     "readonly-array": true,

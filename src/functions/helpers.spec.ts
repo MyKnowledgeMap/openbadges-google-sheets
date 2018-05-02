@@ -1,4 +1,9 @@
-import { and, convertStringToNumber, valueOrDefault } from "./helpers";
+import {
+  and,
+  convertStringToNumber,
+  valueOrDefault,
+  setArray
+} from "./helpers";
 
 describe("and", () => {
   const predicateTests: ReadonlyArray<any> = [
@@ -123,4 +128,24 @@ describe("convertStringToNumber", () => {
       expect(convertStringToNumber(input)).toBe(output);
     });
   }
+});
+
+describe("setArray", () => {
+  // Arrange
+  const input: ReadonlyArray<any> = ["a", "b", "c"];
+  // Act
+  const result = setArray(input, 1, "updated");
+
+  it("should not mutate input", () => {
+    expect(result).not.toBe(input);
+  });
+
+  it("should update at index with value", () => {
+    expect(result[1]).not.toBe(input[1]);
+  });
+
+  it("should not update other values", () => {
+    expect(result[0]).toEqual(input[0]);
+    expect(result[2]).toEqual(input[2]);
+  });
 });
