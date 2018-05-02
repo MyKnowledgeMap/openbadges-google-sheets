@@ -1,5 +1,5 @@
 import { MENU } from "../constants";
-import { setArray } from ".";
+import { setArray } from "./helpers";
 
 /**
  * Add the menu to the active spreadsheet.

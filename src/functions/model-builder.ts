@@ -33,8 +33,10 @@ export function getModelsUsingDynamicProperties(
                     ? cellValue.toUTCString()
                     : cellValue.toString()
               };
-            }, createActivityEvent(model)), // Initialise the nested reducer with a new model based on the previous value.
-        createActivityEvent({ rowIndex }) // Initialise the reducer with new model with rowIndex set.
+              // Initialise the nested reducer with a new model based on the previous value.
+            }, createActivityEvent(model)),
+        // Initialise the reducer with new model with rowIndex set.
+        createActivityEvent({ rowIndex })
       )
     );
 }
