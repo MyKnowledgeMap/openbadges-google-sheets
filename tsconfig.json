@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es3",
     "module": "commonjs",
-    "lib": ["es2015", "es2018"],
+    "lib": ["es6", "esnext"],
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": false,
