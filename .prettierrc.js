@@ -3,7 +3,7 @@ module.exports = {
   parser: "typescript",
   trailingComma: "none",
   bracketSpacing: true,
-  arrowParens: "always",
+  arrowParens: "avoid",
   semi: true,
   tabWidth: 2,
   overrides: [

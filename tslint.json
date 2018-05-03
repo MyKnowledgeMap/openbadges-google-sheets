@@ -1,17 +1,33 @@
 {
-  "defaultSeverity": "error",
-  "extends": ["tslint:recommended"],
-  "jsRules": {},
+  "extends": ["tslint:recommended", "tslint-immutable"],
   "rules": {
+    "no-var-keyword": true,
+    "no-parameter-reassignment": true,
+    "typedef": [true, "call-signature"],
+    "completed-docs": true,
     "object-literal-sort-keys": false,
     "trailing-comma": false,
-    "arrow-parens": true,
+    "arrow-parens": false,
     "variable-name": [
       true,
       "ban-keywords",
       "check-format",
       "allow-leading-underscore"
-    ]
-  },
-  "rulesDirectory": []
+    ],
+    "interface-name": [true, "never-prefix"],
+    "readonly-keyword": [true, "ignore-interface"],
+    "readonly-array": true,
+    "no-let": true,
+    "no-object-mutation": [true, { "ignore-prefix": "global" }],
+    "no-delete": true,
+    "no-method-signature": true,
+    "no-this": true,
+    "no-class": true,
+    "no-mixed-interface": true,
+    "no-expression-statement": [
+      true,
+      { "ignore-prefix": ["describe", "it", "expect", "beforeEach", "global"] }
+    ],
+    "no-if-statement": true
+  }
 }

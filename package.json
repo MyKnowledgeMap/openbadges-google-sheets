@@ -4,13 +4,13 @@
   "description": "Add-on for Google Sheets with OpenBadges.me",
   "scripts": {
     "precommit": "lint-staged",
-    "build": "tsc && babel src --out-dir dist --extensions \".ts\"",
+    "build": "webpack",
     "test": "jest",
     "test:ci":
       "jest --collectCoverage --ci --testResultsProcessor=jest-junit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "lint": "tslint --project \".\"",
+    "lint": "tslint -p tsconfig.json",
     "lint:ci":
-      "tslint --project \".\" --out reports/tslint/tslint-results.xml --format junit",
+      "tslint -p tsconfig.json --out reports/tslint/tslint-results.xml --format junit",
     "package": "node ./scripts/package",
     "deploy": "node ./scripts/deploy"
   },
@@ -21,32 +21,34 @@
     "*.json": ["prettier --parser json --write", "git add"],
     "*.js": ["prettier --parser babylon --write", "git add"]
   },
-  "dependencies": {},
   "devDependencies": {
-    "@babel/cli": "^7.0.0-beta.46",
     "@babel/core": "^7.0.0-beta.46",
-    "@babel/plugin-transform-spread": "^7.0.0-beta.46",
     "@babel/preset-env": "^7.0.0-beta.46",
     "@babel/preset-typescript": "^7.0.0-beta.46",
     "@types/google-apps-script": "0.0.21",
     "@types/jest": "^22.2.3",
-    "@types/node": "^9.6.6",
+    "@types/node": "^9.6.7",
     "archiver": "^2.1.1",
-    "babel-plugin-transform-html-import-to-string": "0.0.1",
-    "babel-plugin-transform-inline-environment-variables": "^0.4.0",
-    "babel-plugin-transform-object-assign": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-remove-export": "^1.0.0",
+    "babel-loader": "^8.0.0-beta.2",
     "chrome-webstore-upload": "^0.2.2",
+    "core-js": "^2.5.5",
     "coveralls": "^3.0.0",
     "dotenv-safe": "^5.0.1",
+    "gas-webpack-plugin": "^0.2.1",
+    "html-loader": "^0.5.5",
     "husky": "^0.14.3",
     "jest": "^22.4.3",
-    "jest-junit": "^3.6.0",
-    "lint-staged": "^7.0.4",
+    "jest-junit": "^3.7.0",
+    "lint-staged": "^7.0.5",
     "prettier": "1.12.1",
     "ts-jest": "^22.4.4",
+    "ts-loader": "^4.2.0",
     "tslint": "^5.9.1",
-    "typescript": "^2.7.2"
-  }
+    "tslint-immutable": "^4.5.4",
+    "typescript": "^2.8.3",
+    "uglifyjs-webpack-plugin": "^1.2.5",
+    "webpack": "^4.6.0",
+    "webpack-cli": "^2.1.2"
+  },
+  "dependencies": {}
 }
