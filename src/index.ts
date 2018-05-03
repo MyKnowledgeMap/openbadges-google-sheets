@@ -119,10 +119,10 @@ export function showSettingsSidebar(): void {
     require("./templates/sheets-settings.sidebar.html")
   ) as SettingsHtmlTemplate;
 
-  return SpreadsheetApp.getUi().showSidebar(
-    Object.assign(template, props)
-      .evaluate()
-      .setTitle("Settings")
-  );
+  const html = Object.assign(template, props)
+    .evaluate()
+    .setTitle("Settings");
+
+  return SpreadsheetApp.getUi().showSidebar(html);
 }
 global.showSettingsSidebar = showSettingsSidebar;

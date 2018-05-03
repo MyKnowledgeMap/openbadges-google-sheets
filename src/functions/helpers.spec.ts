@@ -1,8 +1,8 @@
 import {
   and,
   convertStringToNumber,
-  valueOrDefault,
-  setArray
+  setArray,
+  valueOrDefault
 } from "./helpers";
 
 describe("and", () => {
