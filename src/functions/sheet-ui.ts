@@ -33,13 +33,16 @@ export function updateIssuedColumnForSheet(
       dynamicProperty.columnIndex,
       sheet.getLastRow() - 1
     );
-    const rangeValues = Object.freeze(range.getValues());
 
-    const result = payloads
+    // Get the values for the range.
+    const originalValues = Object.freeze(range.getValues());
+
+    // Get the new values using the original values and setting the value for each payload rowIndex to "Y".
+    const newValues = payloads
       .map(x => x.rowIndex)
-      .reduce((values, index) => setArray(values, index, ["Y"]), rangeValues);
+      .reduce((v, i) => setArray(v, i, ["Y"]), originalValues);
 
-    // Would be nice if didn't have to typecast here but setValues doesn't like ReadonlyArray :(
-    return range.setValues(result as any);
+    // Update the values in the range using the new values.
+    return range.setValues(newValues as CellValue[][]); // tslint:disable-line:readonly-array
   };
 }

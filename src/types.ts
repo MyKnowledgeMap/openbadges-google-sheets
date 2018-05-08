@@ -3,8 +3,15 @@
  */
 type Predicate<T> = (value: T) => boolean;
 
-// TODO: description
+/**
+ * This class allows users to access specific information on HTTP.
+ */
 type HttpResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+
+/**
+ * Shorthand for GoogleAppsScript.Spreadsheet.Spreadsheet.
+ */
+type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
 
 /**
  * Shorthand for GoogleAppsScript.Spreadsheet.Sheet.
@@ -50,6 +57,24 @@ type GetValuesResult = ReadonlyArray<ReadonlyArray<CellValue>>;
  * Shorthand for GoogleAppsScript.HTML.HtmlTemplate.
  */
 type HtmlTemplate = GoogleAppsScript.HTML.HtmlTemplate;
+
+/**
+ * A response handler builder which returns a function which returns a function which returns a response handler.
+ */
+type ResponseHandlerBuilder = Builder<
+  Sheet,
+  Builder<ReadonlyArray<CreateActivityEvent>, ResponseHandler>
+>;
+
+/**
+ * A response handler with actions for error and success responses.
+ *
+ * @interface ResponseHandler
+ */
+interface ResponseHandler {
+  success: () => any;
+  error: (res: HttpResponse) => any;
+}
 
 /**
  * An object with an index signature.
