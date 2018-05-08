@@ -26,8 +26,19 @@
     "no-mixed-interface": true,
     "no-expression-statement": [
       true,
-      { "ignore-prefix": ["describe", "it", "expect", "beforeEach", "global"] }
+      {
+        "ignore-prefix": [
+          "describe",
+          "it",
+          "expect",
+          "beforeEach",
+          "beforeAll",
+          "global",
+          "setup"
+        ]
+      }
     ],
-    "no-if-statement": true
+    "no-if-statement": true,
+    "ban": [true, "Logger.log"]
   }
 }
