@@ -1,6 +1,6 @@
 # OpenBadges.me Google Apps Script
 
-[![CircleCI](https://circleci.com/gh/harrymitchinson/openbadges-google-sheets.svg?style=svg)](https://circleci.com/gh/harrymitchinson/openbadges-google-sheets) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-sheets/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-sheets?branch=coveralls)
+[![CircleCI](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets.svg?style=svg)](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-sheets/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-sheets?branch=coveralls)
 
 Google Apps Scripts for OpenBadges.me containing add-on for Google Sheets.
 
