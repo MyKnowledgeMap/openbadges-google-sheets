@@ -1,6 +1,6 @@
 # OpenBadges.me Google Apps Script
 
-[![CircleCI](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets.svg?style=svg)](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets) [![Coverage Status](https://coveralls.io/repos/github/harrymitchinson/openbadges-google-sheets/badge.svg?branch=coveralls)](https://coveralls.io/github/harrymitchinson/openbadges-google-sheets?branch=coveralls)
+[![CircleCI](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets.svg?style=svg)](https://circleci.com/gh/myknowledgemap/openbadges-google-sheets) [![Coverage Status](https://coveralls.io/repos/github/myknowledgemap/openbadges-google-sheets/badge.svg?branch=coveralls)](https://coveralls.io/github/myknowledgemap/openbadges-google-sheets?branch=coveralls)
 
 Google Apps Scripts for OpenBadges.me containing add-on for Google Sheets.
 
@@ -28,13 +28,13 @@ These add-ons can be used to create *activity events* which are simply records t
 
 This add-on allows you to create an activity event when a form has been completed.
 
-[View on GitHub](https://github.com/harrymitchinson/openbadges-google-forms)
+[View on GitHub](https://github.com/myknowledgemap/openbadges-google-forms)
 
 ### Sheets add-on
 
 This add-on allows you to create many activity events and is manually triggered and processed. The add-on can use tracking columns which requires rows to be verified before they are processed. 
 
-[View on GitHub](https://github.com/harrymitchinson/openbadges-google-sheets)
+[View on GitHub](https://github.com/myknowledgemap/openbadges-google-sheets)
 
 ## How to install
 
